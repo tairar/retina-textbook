@@ -497,6 +497,22 @@ hr.sep{border:none;border-top:1px dashed var(--line);margin:30px 0}
     <tr><td><span class="v">σ</span><sub>S</sub></td><td>サラウンドの広がり</td><td class="num">0.15°</td></tr>
     <tr><td><span class="v">τ</span><sub>S</sub></td><td>サラウンドの時定数</td><td class="num">0.004 秒</td></tr>
   </table></div>
+
+  <h3>5.5　なぜ「度」という単位なのか</h3>
+  <p>σの単位が「度」なのは不思議に見えるかもしれません。これは回転角度の度ではなく、
+  <strong>視角度数</strong>（視覚科学で使われる、「目から見てその大きさが何度の角度に
+  相当するか」という単位）です。ピクセル数ではなく視角度数で大きさを指定しておくことで、
+  カメラの解像度が変わっても「生物の目にとって同じ大きさ」を保ったまま使い回せます。</p>
+
+  <p>実際にピクセルへ変換している箇所もconvisのソースにあります：</p>
+  <div class="eq"><div class="eq-row prose">
+    <code>convis/convis/variables.py:42</code>　<code>class ResolutionInfo(object): def __init__(self, pixel_per_degree=10.0, ...)</code>
+  </div></div>
+  <p>既定値は<strong>1度あたり10ピクセル</strong>。これを使うと：</p>
+  <div class="eq"><span class="eqbox" data-tex="\sigma_C = 0.05^\circ \times 10\,\text{px/}^\circ = 0.5\,\text{px}, \qquad \sigma_S = 0.15^\circ \times 10\,\text{px/}^\circ = 1.5\,\text{px}"></span></div>
+  <p>3章・4章で実測したカーネルサイズ（center_Gが3×3、surround_Gが11×11）は、
+  まさにこの0.5px・1.5pxという標準偏差から3章の切り捨て半径の式で決まったものでした。
+  「度」という見慣れない単位も、たどっていけばちゃんとピクセルの世界に接続しています。</p>
 </section>
 
 <!-- ============ CH6 ============ -->
