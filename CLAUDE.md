@@ -58,7 +58,7 @@ https://claude.ai/artifact/HDHdwfHV8iYwbkHs7piyvx
 7. 神経節細胞とスパイク生成
 8. まとめ：全体の数式地図
 
-現在、数式（`data-tex`）は25個。
+現在、数式（`data-tex`）は26個（4章・5章・6章・7章に実測値つきのSVG図を追加済み。6章は6.5節を新設し、GanglionInputの実コード上の静的非線形性を記載）。
 
 ## convis-legacyとの関係・参照資料
 
