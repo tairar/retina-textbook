@@ -400,6 +400,27 @@ hr.sep{border:none;border-top:1px dashed var(--line);margin:30px 0}
   <h3>4.3　convis での実際の形</h3>
   <p>convis のコード（<code>TemporalLowPassFilterRecursive</code>）はこれを少し違う書き方で実装しています。中身は同じ漸化式ですが、正規化（重みの合計を1にする操作）を毎回ではなく最後に1回だけ行う形になっています。数式としては完全に等価です。</p>
 
+  <h4>実際のパラメータで計算してグラフにする</h4>
+  <p>convisの既定値は <span class="v">τ</span><sub>C</sub>=0.01秒、1ステップの幅 <span class="v">Δ</span>=0.001秒です。このとき：</p>
+  <div class="eq"><span class="eqbox" data-tex="\alpha \;=\; e^{-\Delta/\tau} \;=\; e^{-0.001/0.01} \;=\; e^{-0.1} \;\approx\; 0.905"></span></div>
+  <p>この <span class="v">α</span> を使って、入力が0から1に急変したときの <span class="v">z</span>[<span class="v">k</span>] を実際に1ステップずつ計算すると、下のようなカーブになります（黒の破線は入力=1、オレンジの点は63.2%に到達する位置）。</p>
+  <svg viewBox="0 0 460 190" style="width:100%;max-width:460px;display:block;margin:18px auto" role="img" aria-label="center_Eのステップ応答グラフ">
+    <line x1="40" y1="160" x2="450" y2="160" stroke="var(--ink-soft)" stroke-width="1"/>
+    <line x1="40" y1="20" x2="40" y2="160" stroke="var(--ink-soft)" stroke-width="1"/>
+    <line x1="40" y1="20" x2="450" y2="20" stroke="var(--muted)" stroke-width="1" stroke-dasharray="4 3"/>
+    <text x="356" y="16" font-size="11" fill="var(--muted)">入力=1</text>
+    <line x1="40" y1="71.5" x2="160" y2="71.5" stroke="var(--accent)" stroke-width="1" stroke-dasharray="3 2"/>
+    <line x1="160" y1="71.5" x2="160" y2="160" stroke="var(--accent)" stroke-width="1" stroke-dasharray="3 2"/>
+    <circle cx="160" cy="71.5" r="3.5" fill="var(--accent)"/>
+    <text x="165" y="68" font-size="11" fill="var(--accent)">63.2%（k≈9〜10）</text>
+    <polyline points="40,146.7 66.7,123.7 93.3,104.9 120,89.5 146.7,76.9 173.3,66.6 200,58.1 226.7,51.2 253.3,45.6 280,40.9 306.7,37.1 333.3,34.0 360,31.5 386.7,29.4 413.3,27.7 440,26.3" fill="none" stroke="var(--indigo)" stroke-width="2.2"/>
+    <text x="40" y="178" font-size="11" fill="var(--muted)">k=0</text>
+    <text x="420" y="178" font-size="11" fill="var(--muted)">k=30</text>
+    <text x="8" y="24" font-size="11" fill="var(--muted)">1.0</text>
+    <text x="14" y="164" font-size="11" fill="var(--muted)">0</text>
+  </svg>
+  <p>理論上は <span class="v">k</span>=<span class="v">τ</span>/<span class="v">Δ</span>=10ステップで63.2%に到達するはずですが、実際に1ステップずつ計算すると <span class="v">k</span>=9で先にその値を超えます（連続的な式を1ステップぶんの大きさで離散化している以上、生まれる小さなズレです）。</p>
+
   <h3>4.4　なぜこの漸化式が「正しい」と言えるのか——微分方程式からの導出</h3>
   <p>4.1節の漸化式は、天下り的に「こういう式です」と提示しただけでした。ここで、1.9節の道具を使って、<strong>なぜこの形になるのか</strong>をちゃんと導きます。</p>
   <p>入力 <span class="v">x</span> がある「漏れのある積分」は、こういう微分方程式で書けます：</p>
@@ -442,6 +463,21 @@ hr.sep{border:none;border-top:1px dashed var(--line);margin:30px 0}
     <span class="label">直感：画像処理でいう「アンシャープマスク」と同じ発想</span>
     <p>写真編集の「シャープ化」は、元画像からぼかした画像を引いてエッジを強調します。OPLのセンター−サラウンドは、これとまったく同じ仕組みを、空間だけでなく時間方向にも適用したものです。</p>
   </div>
+
+  <h4>実際のσ値でセンター・サラウンドを描いてみる</h4>
+  <p>3.4節のガウシアンに、5.4節の既定値 <span class="v">σ</span><sub>C</sub>=0.05°、<span class="v">σ</span><sub>S</sub>=0.15° を入れて実際に計算すると、センター（細く高い）とサラウンド（広く低い）、その差（中央が盛り上がり、両脇がへこむ「メキシカンハット」形）が下のようになります。</p>
+  <svg viewBox="0 0 480 240" style="width:100%;max-width:480px;display:block;margin:18px auto" role="img" aria-label="センター・サラウンド・その差のグラフ">
+    <line x1="40" y1="190" x2="450" y2="190" stroke="var(--ink-soft)" stroke-width="1"/>
+    <line x1="240" y1="20" x2="240" y2="230" stroke="var(--muted)" stroke-width="1" stroke-dasharray="4 3"/>
+    <text x="244" y="228" font-size="10" fill="var(--muted)">u=0°</text>
+    <polyline points="40,190 65,190 90,190 115,190 140,190 165,188.4 190,170.6 215,103.9 240,46.4 265,103.9 290,170.6 315,188.4 340,190 365,190 390,190 415,190 440,190" fill="none" stroke="var(--indigo)" stroke-width="2"/>
+    <polyline points="40,188.6 65,187 90,183.5 115,178.1 140,170.4 165,161.0 190,151.7 215,144.6 240,142.1 265,144.6 290,151.7 315,161.0 340,170.4 365,178.1 390,183.5 415,187 440,188.6" fill="none" stroke="var(--accent)" stroke-width="2"/>
+    <polyline points="40,191.4 65,193.1 90,196.5 115,201.9 140,209.6 165,217.4 190,208.9 215,148.2 240,94.2 265,148.2 290,208.9 315,217.4 340,209.6 365,201.9 390,196.5 415,193.1 440,191.4" fill="none" stroke="var(--good)" stroke-width="2.3"/>
+    <text x="42" y="56" font-size="11" fill="var(--indigo)">C（センター）</text>
+    <text x="42" y="150" font-size="11" fill="var(--accent)">S（サラウンド）</text>
+    <text x="280" y="233" font-size="11" fill="var(--good)">I_OPL = C − S（差）</text>
+  </svg>
+  <p>中心（<span class="v">u</span>=0）では <span class="v">C</span>(0)≈7.98、<span class="v">S</span>(0)≈2.66 で、差は+5.32——センターが圧勝します。少し離れた<span class="v">u</span>≈0.08°付近で差はいったんゼロになり、そこから外側では<strong>差が負</strong>になります（緑の線が両脇でへこんでいる部分）。これが「中心は明るさ、周辺は暗さに反応する」という、網膜細胞の典型的な受容野の形そのものです。</p>
 
   <h3>5.3　VirtualRetina 論文の式</h3>
   <p>元論文（Wohrer &amp; Kornprobst, 2009）では、ぼかしの基本単位をこう定義しています：</p>
@@ -505,6 +541,24 @@ hr.sep{border:none;border-top:1px dashed var(--line);margin:30px 0}
     <span class="label">この「指数関数で近づく」形、実は4章で数値実験済み</span>
     <p>この教科書の元になった調査では、4章の時間フィルタ（τ=10ms）に階段状の入力を与えて実際に計算したところ、<strong>1τ（10ms）経過時点で最終値の63.2%に到達</strong>という、指数関数特有の性質がぴったり数値で確認できています（理論値は 1−<span class="v">e</span><sup>−1</sup>≈0.632）。6.1節・6.4節の <span class="v">V</span> も、同じ数式的な性質を持つ——<span class="v">τ</span>=1/<span class="v">g</span> が小さい（<span class="v">g</span> が大きい）ほど、<span class="v">V</span><sub>∞</sub> に速く収まる、という関係です。</p>
   </div>
+
+  <h3>6.5　実際のconvisコードでの静的非線形性</h3>
+  <p>6.1〜6.4節の微分方程式はVirtual Retina論文の考え方そのままですが、convisの実装（<code>GanglionInput</code>クラス）では、双極細胞の出力を次の<strong>静的な（微分方程式を使わない）数式</strong>で近似しています：</p>
+  <div class="eq"><div class="eq-row prose">
+    <span class="v">x</span> ≤ <span class="v">v</span><sub>0</sub> のとき：<span class="eqbox" data-display="false" data-tex="n(x)=\dfrac{i_0}{1-\lambda_G(x-v_0)/i_0}" style="display:inline-block"></span>　／　<span class="v">x</span> &gt; <span class="v">v</span><sub>0</sub> のとき：<span class="eqbox" data-display="false" data-tex="n(x)=i_0+\lambda_G(x-v_0)" style="display:inline-block"></span>
+  </div></div>
+  <p>既定値は <span class="v">i</span><sub>0</sub>=37（単位Hz）、<span class="v">v</span><sub>0</sub>=0、<span class="v">λ</span><sub>G</sub>=100（Hz）。実際に計算すると、下のようなグラフになります：</p>
+  <svg viewBox="0 0 480 220" style="width:100%;max-width:480px;display:block;margin:18px auto" role="img" aria-label="静的非線形性のグラフ">
+    <line x1="40" y1="200" x2="450" y2="200" stroke="var(--ink-soft)" stroke-width="1"/>
+    <line x1="290" y1="20" x2="290" y2="200" stroke="var(--muted)" stroke-width="1" stroke-dasharray="4 3"/>
+    <text x="294" y="30" font-size="11" fill="var(--muted)">v₀=0</text>
+    <polyline points="40,160.7 65,158.3 90,155.6 115,152.5 140,148.9 165,144.8 190,140.0 215,134.2 240,127.2 265,118.5 290,107.5 315,95.0 340,82.5 365,70.0 390,57.5 415,45.0 440,32.5" fill="none" stroke="var(--indigo)" stroke-width="2.3"/>
+    <circle cx="290" cy="107.5" r="3.5" fill="var(--accent)"/>
+    <text x="296" y="112" font-size="11" fill="var(--accent)">n(0)=i₀=37</text>
+    <text x="42" y="150" font-size="11" fill="var(--ink-soft)">x≤0：なめらかに0へ飽和</text>
+    <text x="330" y="55" font-size="11" fill="var(--ink-soft)">x&gt;0：直線的に増加</text>
+  </svg>
+  <p><span class="v">x</span>=0のところで、左側（飽和する側）と右側（直線の側）の傾きがどちらもちょうど <span class="v">λ</span><sub>G</sub>=100になっていて、グラフが滑らかに繋がっています（カクッと折れ曲がっていません）。<span class="v">x</span>が大きく負（強い抑制）になるほど出力はなめらかに0へ近づき、<span class="v">x</span>が正（興奮）のときは直線的に増えていく——「弱い抑制はそのまま通すが、強い抑制でも出力をゼロ未満にはできない」という、発火率ならではの非対称な非線形性です。</p>
 </section>
 
 <!-- ============ CH7 ============ -->
@@ -520,6 +574,26 @@ hr.sep{border:none;border-top:1px dashed var(--line);margin:30px 0}
   </div></div>
   <p>これを<strong>LIF（Leaky Integrate-and-Fire、漏れ積分発火）モデル</strong>と呼びます。「漏れ」は、水を注いでいる間も少しずつ蒸発している（<span class="v">V</span> が自然に減っていく）ことを表します。</p>
   <p>この「溢れるまで」の <span class="v">V</span> の増え方そのものは、実は<strong>6.4節で解いた式と同じ形</strong>です。神経節細胞にも同じ「電流を受けて、指数関数的にある値へ近づく」膜の方程式が使われていて、違うのは<strong>しきい値を超えた瞬間に0へリセットする</strong>という1行が付け加わっただけ。なめらかな指数関数のカーブを、一定の高さでスパッと切って振り出しに戻す——それだけで、連続的な曲線から0/1のパルス列が生まれます。</p>
+
+  <div class="eq"><span class="eqbox" data-tex="V_{\text{tmp}} \;=\; V_k + \big(I - g_L V_k\big)\,\Delta"></span></div>
+  <div class="eq"><div class="eq-row prose">
+    <span class="v">V</span><sub>tmp</sub> &gt; <span class="v">θ</span>（しきい値）なら → 発火して <span class="v">V</span><sub><span class="v">k</span>+1</sub>=0　／　そうでなければ → <span class="v">V</span><sub><span class="v">k</span>+1</sub>=<span class="v">V</span><sub>tmp</sub>
+  </div></div>
+  <p>convisの既定値は <span class="v">g</span><sub>L</sub>=50（Hz）、<span class="v">θ</span>=1.0、1ステップ幅 <span class="v">Δ</span>=0.001秒。たとえば入力 <span class="v">I</span>=70 を入れっぱなしにすると（6.4節の形にあてはめると <span class="v">V</span><sub>∞</sub>=<span class="v">I</span>/<span class="v">g</span><sub>L</sub>=1.4で、しきい値1.0より大きいので必ず発火します）、実際に1ステップずつ計算すると下のようなギザギザ（発火のたびに0へリセットされる）のグラフになります：</p>
+  <svg viewBox="0 0 460 190" style="width:100%;max-width:460px;display:block;margin:18px auto" role="img" aria-label="LIFモデルの膜電位とスパイクのグラフ">
+    <line x1="40" y1="170" x2="450" y2="170" stroke="var(--ink-soft)" stroke-width="1"/>
+    <line x1="40" y1="60" x2="450" y2="60" stroke="var(--accent)" stroke-width="1" stroke-dasharray="4 3"/>
+    <text x="330" y="57" font-size="11" fill="var(--accent)">しきい値 θ=1.0</text>
+    <polyline points="40,162.3 72,135.1 104,113.0 136,95.1 168,80.4 200,68.5 224,61.0" fill="none" stroke="var(--indigo)" stroke-width="2.2"/>
+    <line x1="224" y1="61.0" x2="232" y2="170" stroke="var(--indigo)" stroke-width="2.2"/>
+    <polyline points="240,162.3 272,135.1 304,113.0 336,95.1 368,80.4 400,68.5 424,61.0" fill="none" stroke="var(--indigo)" stroke-width="2.2"/>
+    <line x1="424" y1="61.0" x2="432" y2="170" stroke="var(--indigo)" stroke-width="2.2"/>
+    <text x="195" y="183" font-size="10" fill="var(--muted)">発火→0</text>
+    <text x="395" y="183" font-size="10" fill="var(--muted)">発火→0</text>
+    <text x="14" y="174" font-size="11" fill="var(--muted)">0</text>
+    <text x="8" y="64" font-size="11" fill="var(--muted)">1.0</text>
+  </svg>
+  <p>約25ステップ（25ミリ秒）ごとに規則的に発火しています（ノイズを入れていない理想化した計算なので、きれいに等間隔になっています。実際のconvisは7.2節の通りここに乱数を加えるので、間隔は毎回少しずつ変わります）。</p>
 
   <h3>7.2　ノイズも最初から入っている</h3>
   <p>convis のスパイク生成は、膜電位の更新に毎回小さな乱数を足しています。これは「神経細胞は厳密に同じ入力でも、毎回まったく同じようには発火しない」という生物学的な事実を再現するためです。発火した後も、一定時間は発火できない<strong>不応期</strong>（この時間の長さにも乱数が使われる）が設けられています。</p>
