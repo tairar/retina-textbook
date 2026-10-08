@@ -482,11 +482,11 @@ hr.sep{border:none;border-top:1px dashed var(--line);margin:30px 0}
   <h3>5.3　VirtualRetina 論文の式</h3>
   <p>元論文（Wohrer &amp; Kornprobst, 2009）では、ぼかしの基本単位をこう定義しています：</p>
   <div class="eq"><span class="eqbox" data-tex="K_{\sigma,\tau}(x,y,t) \;=\; G_\sigma(x,y)\cdot\dfrac{e^{-t/\tau}}{\tau}"></span></div>
-  <p>これは3章の空間ガウシアン <span class="v">G</span><sub><span class="v">σ</span></sub> と、4章の時間指数フィルタ <span class="v">exp(−t/τ)/τ</span> を掛け合わせただけのものです。センター用は <span class="v">σ</span><sub>C</sub>（狭い）・<span class="v">τ</span><sub>C</sub>（速い）、サラウンド用は <span class="v">σ</span><sub>S</sub>（広い）・<span class="v">τ</span><sub>S</sub>（遅い）という別の数値を使います。</p>
+  <p>これは3章の空間ガウシアン <span class="v">G</span><sub><span class="v">σ</span></sub> と、4章の時間指数フィルタ <span class="v">exp(−t/τ)/τ</span> を掛け合わせただけのものです。センター用は <span class="v">σ</span><sub>C</sub>（狭い）・<span class="v">τ</span><sub>C</sub>（遅い、0.01秒）、サラウンド用は <span class="v">σ</span><sub>S</sub>（広い）・<span class="v">τ</span><sub>S</sub>（速い、0.004秒）という別の数値を使います。</p>
 
   <div class="box bio">
     <span class="label">生理学的な対応</span>
-    <p><strong>センター</strong>は光受容体からの直接の信号、<strong>サラウンド</strong>は隣の細胞どうしが強く繋がっている水平細胞からの信号に対応します。水平細胞は1段余分にシナプスを経由するぶん、反応が遅く、また広い範囲の細胞と繋がっているぶん空間的にも広くなる——それが <span class="v">σ</span><sub>S</sub>&gt;<span class="v">σ</span><sub>C</sub>、<span class="v">τ</span><sub>S</sub>&gt;<span class="v">τ</span><sub>C</sub> という大小関係の理由です。</p>
+    <p><strong>センター</strong>は光受容体からの直接の信号、<strong>サラウンド</strong>は隣の細胞どうしが強く繋がっている水平細胞からの信号に対応します。水平細胞は広い範囲の細胞と繋がっているぶん、空間的に広くなります——それが <span class="v">σ</span><sub>S</sub>&gt;<span class="v">σ</span><sub>C</sub> の理由です。ただし時定数は逆に <span class="v">τ</span><sub>S</sub>&lt;<span class="v">τ</span><sub>C</sub>（サラウンドの方が速い、0.004秒 vs 0.01秒）で、「シナプスを1段余分に経由するから遅い」という単純な説明だけでは、この時定数の大小関係は説明できません（興奮性・抑制性の経路の違いなど、もっと詳しい回路の性質に関わると考えられますが、本書ではそこまでは踏み込みません）。</p>
   </div>
 
   <h3>5.4　既定のパラメータ値</h3>
