@@ -112,7 +112,7 @@ h4{font-size:15.5px;margin:22px 0 8px;color:var(--ink-soft);font-family:"Zen Kak
 .eq .katex-display{margin:0}
 .eq-row{display:flex;align-items:baseline;justify-content:center;gap:.05em;flex-wrap:wrap;row-gap:10px;font-family:"STIX Two Text",Georgia,"Times New Roman",serif;font-size:20px;color:var(--ink);text-align:center}
 .eq-row.prose{font-family:"Zen Kaku Gothic New",sans-serif;font-size:15.5px;justify-content:flex-start;text-align:left;line-height:1.9}
-.v,.gk{font-family:"STIX Two Text",Georgia,"Times New Roman",serif;font-style:italic}
+.v,.gk{font-family:"STIX Two Text",Georgia,"Times New Roman",serif;font-style:italic;font-size:1.1em;font-weight:600}
 .v{color:var(--indigo)}
 .gk{color:var(--accent)}
 .jp{font-family:"Zen Kaku Gothic New",sans-serif;font-style:normal;font-size:.72em;color:var(--ink-soft);margin:0 .1em}
@@ -727,6 +727,16 @@ hr.sep{border:none;border-top:1px dashed var(--line);margin:30px 0}
   <p><span class="v">g</span><sub>L</sub>（leak、漏れ）が6.1節の<span class="v">g</span><sub>0</sub>に対応する、常に一定の基本コンダクタンスです。6.1節では<span class="v">g</span>=<span class="v">g</span><sub>0</sub>+<span class="v">λV</span>²とまとめて書きましたが、実際には<span class="v">λV</span>²の部分は<code>inhibition</code>という名前で、瞬時の値ではなく後述のフィルタをかけた値が使われます。</p>
 
   <div class="eq"><span class="eqbox" data-tex="E_\infty = \dfrac{\text{input\_amp}\times I_{OPL}}{\text{total\_conductance}}, \qquad V_{\text{bip}} = (V_{\text{prev}}-E_\infty)\times\text{attenuation\_map} + E_\infty"></span></div>
+  <div class="box ex">
+    <span class="label">今の入力（I_OPL）が実際に使われるのは、この1箇所だけ</span>
+    <p>上の式をよく見ると、<span class="v">I</span><sub>OPL</sub>（今のフレームの値）が出てくるのは
+    <span class="v">E</span><sub>∞</sub>の分子だけです。<code>total_conductance</code>と
+    <code>attenuation_map</code>はどちらも<strong>1つ前のステップの状態（<code>inhibition</code>）
+    だけ</strong>で決まり、今の入力には依存しません。つまり今の入力が動かすのは
+    「<strong>どこを目指すか</strong>」（<span class="v">E</span><sub>∞</sub>という目標値）だけで、
+    「<strong>どれだけ速くそこに近づくか</strong>」（<span class="v">attenuation_map</span>）は
+    過去の抑制状態だけが決めている、という役割分担になっています。</p>
+  </div>
   <p>見比べると、<span class="v">E</span><sub>∞</sub>が6.4節の<span class="v">V</span><sub>∞</sub>、
   <span class="v">attenuation_map</span>が6.4節の<span class="v">e</span><sup>−<span class="v">gt</span></sup>に
   そのまま対応しています。6.4節では「<span class="v">g</span>が一瞬だけ一定だとみなして」解きましたが、
@@ -785,6 +795,18 @@ hr.sep{border:none;border-top:1px dashed var(--line);margin:30px 0}
   それぞれが自分のスパイク列（0/1の時系列）を持っています。「ON＝発火した」
   「OFF＝発火しなかった」という意味では<strong>ありません</strong>——ON細胞もOFF細胞も、
   それぞれ発火する瞬間と発火しない瞬間の両方があります。</p>
+
+  <div class="box ex">
+    <span class="label">分岐はGanglionInputで起きる——Bipolarは1回しか計算されない</span>
+    <p><code>Retina.forward</code>（`convis/convis/retina.py:148`）は、各段を
+    <code>(出力キー, 関数, 入力キー)</code>という命令のリストとして順に実行します。
+    <code>Bipolar</code>の命令は<code>(['I1','I2'], self.bipolar, ['I1'])</code>——
+    入力は<code>I1</code>（6章までの出力）<strong>1つだけ</strong>で、その1つの戻り値が
+    <code>I1</code>と<code>I2</code>の<strong>両方</strong>に書き込まれます。つまり
+    Bipolarは1回しか動かず、全く同じ<span class="v">V</span><sub>bip</sub>がON用の
+    <code>gang_0_input</code>とOFF用の<code>gang_1_input</code>の両方に渡されます。
+    下で見る符号の分岐は、この後のGanglionInputの中で初めて起きます。</p>
+  </div>
 
   <p>何が違うのかというと、<strong>どちらの向きのコントラスト変化に反応するか</strong>です。
   convisの実装（<code>GanglionInput.forward</code>、`convis/convis/filters/retina.py:782`）には
