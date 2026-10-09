@@ -618,6 +618,30 @@ hr.sep{border:none;border-top:1px dashed var(--line);margin:30px 0}
     <span class="label">この性質が持つ実用上の意味</span>
     <p>スパイクの<strong>タイミング・場所</strong>は、ごくわずかな計算誤差でも敏感にずれます（しきい値ぎりぎりで水が溢れるかどうかが、ほんの少しの違いで変わるのと同じ）。一方で、ある程度の時間・範囲で発火した<strong>回数（頻度）</strong>は、個々のスパイクの位置ほどは崩れにくい性質があります。モデルの出力を評価するときは、どちらを見ているかを意識する必要があります。</p>
   </div>
+
+  <h3>7.3　実際のconvisコードでは（式を並べ替えると4章と同じ形になる）</h3>
+  <p>convisの実装（<code>GanglionSpiking</code>クラス）では、7.1節の「しきい値を超えたら0に戻す」の
+  手前の積分部分が、ノイズ込みでこう書かれています：</p>
+  <div class="eq"><span class="eqbox" data-tex="V_{\text{new}} \;=\; V + \big(I - g_L V + \text{noise}\big)\,\Delta"></span></div>
+  <p>これを展開して並べ替えると：</p>
+  <div class="eq"><span class="eqbox" data-tex="V_{\text{new}} \;=\; V + I\Delta - g_L\Delta V + \text{noise}\cdot\Delta \;=\; \underbrace{(1-g_L\Delta)}_{c_1}\,V \;+\; I\Delta \;+\; \text{noise}\cdot\Delta"></span></div>
+  <p>見覚えのある形になりました——4.4節の <span class="v">z</span>[<span class="v">k</span>]=(1−<span class="v">α</span>)<span class="v">x</span>[<span class="v">k</span>]+<span class="v">α</span><span class="v">z</span>[<span class="v">k</span>−1]
+  と全く同じ「係数×状態＋入力」の形です。<span class="v">c</span><sub>1</sub>=1−<span class="v">g</span><sub>L</sub><span class="v">Δ</span> が
+  center_Eの <span class="v">α</span> の役割を果たしています。convisの既定値
+  <span class="v">g</span><sub>L</sub>=50、<span class="v">Δ</span>=0.001秒を入れると
+  <span class="v">c</span><sub>1</sub>=1−50×0.001=0.95——center_Eの<span class="v">α</span>≈0.905
+  （4.3節）と近い値域です。神経節細胞の膜も、双極細胞も、center_Eも、形は全部同じ
+  「漏れのある積分」の離散版だということです。</p>
+
+  <div class="box ex">
+    <span class="label">この見方は実際に確かめられている</span>
+    <p>この教科書の元になった調査では、このGanglionSpikingの2つの乗算
+    （<span class="v">c</span><sub>1</sub>×<span class="v">V</span> と <span class="v">I</span>×<span class="v">Δ</span>）に
+    4章・6章と同じ近似乗算器を適用する実験も行っている。結果はcenter_Eと同様、MAE 0.89%あたりから
+    急激に崩れる「崖」のパターン（ON側のSSIMが0.997→0.629→0.0001）が実際に確認できた——
+    「式の形が同じなら、壊れ方の傾向も似る」という予想が、パイプラインの最後のステージでも
+    裏付けられた形になる。</p>
+  </div>
 </section>
 
 <!-- ============ CH8 ============ -->
