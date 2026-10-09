@@ -583,7 +583,58 @@ hr.sep{border:none;border-top:1px dashed var(--line);margin:30px 0}
   <h2>神経節細胞とスパイク生成</h2>
   <p class="lead">最後の段階で、連続的な数値を「発火する／しない」という0か1かの信号に変えます。</p>
 
-  <h3>7.1　水がコップから溢れる瞬間</h3>
+  <h3>7.1　ON細胞とOFF細胞——2つの独立した経路</h3>
+  <p>ここまで「神経節細胞」とひとまとめに呼んできましたが、実際には同じ場所に
+  <strong>ON細胞</strong>と<strong>OFF細胞</strong>という2種類の細胞が独立に存在し、
+  それぞれが自分のスパイク列（0/1の時系列）を持っています。「ON＝発火した」
+  「OFF＝発火しなかった」という意味では<strong>ありません</strong>——ON細胞もOFF細胞も、
+  それぞれ発火する瞬間と発火しない瞬間の両方があります。</p>
+
+  <p>何が違うのかというと、<strong>どちらの向きのコントラスト変化に反応するか</strong>です。
+  convisの実装（<code>GanglionInput.forward</code>、`convis/convis/filters/retina.py:782`）には
+  こう書かれています：</p>
+  <div class="eq"><span class="eqbox" data-tex="x \;=\; \text{sign} \times \text{（6章までの処理を経た信号）}"></span></div>
+  <p>この<span class="v">x</span>が、6.5節の非線形関数 <span class="v">n</span>(<span class="v">x</span>) に渡されます。
+  <span class="v">sign</span>の既定値はON細胞が <strong>+1</strong>、OFF細胞が <strong>−1</strong>
+  （`convis/convis/retina_virtualretina.py`のデフォルト設定）。同じ入力信号に、符号を
+  掛けるか掛けないかだけの違いです。</p>
+
+  <div class="flow">
+    <div class="node"><b>同じ入力信号</b><span>6章までの出力</span></div>
+    <div class="arrow">→</div>
+    <div class="node"><b>×(+1)</b><span>ON細胞へ</span></div>
+  </div>
+  <div class="flow">
+    <div class="node"><b>同じ入力信号</b><span>6章までの出力</span></div>
+    <div class="arrow">→</div>
+    <div class="node"><b>×(−1)</b><span>OFF細胞へ</span></div>
+  </div>
+
+  <p>6.5節のグラフを思い出すと、<span class="v">n</span>(<span class="v">x</span>)は
+  <span class="v">x</span>が正のときだけ大きく反応する形でした。だから：</p>
+  <ul>
+    <li><strong>ON細胞</strong>：信号がもともと正（明るくなった）のとき、符号そのまま
+      <span class="v">x</span>が正になり、強く反応する</li>
+    <li><strong>OFF細胞</strong>：信号がもともと負（暗くなった）のとき、符号を反転させた
+      ぶん<span class="v">x</span>が正になり、強く反応する</li>
+  </ul>
+  <p>符号を反転させることで、「暗くなった」という本来は負の変化を、OFF細胞にとっての
+  「正の入力」として同じ非線形関数に通せるようにしている、というわけです。</p>
+
+  <div class="box bio">
+    <span class="label">生理学的な対応</span>
+    <p>実際の網膜にも、明るさの増加に反応するON型双極細胞・神経節細胞と、減少に反応する
+    OFF型の細胞が、本当に別の細胞として存在します。convisの<span class="v">sign</span>は
+    この2系統を、同じ計算式を使い回しながら符号だけ変えて再現する実装上の工夫です。</p>
+  </div>
+
+  <p>このノートブックのコードでは、ON細胞の出力が<code>output.array(0)</code>（または
+  <code>gang_0_spikes</code>）、OFF細胞の出力が<code>output.array(1)</code>（または
+  <code>gang_1_spikes</code>）という決まった対応になっています
+  （`convis/convis/retina.py:165`：<code>keys=['ganglion_spikes_ON','ganglion_spikes_OFF']</code>）。
+  これ以降の節で「ON側」「OFF側」と書いたときは、この2つの独立したチャンネルのことを指します。</p>
+
+  <h3>7.2　水がコップから溢れる瞬間</h3>
   <p>神経節細胞の膜電位 <span class="v">V</span> は、6章と同様に電流を受けて少しずつ増えていきます。コップに水を注ぐのと同じです。</p>
   <div class="eq"><div class="eq-row prose">
     <span class="v">V</span> がある<strong>しきい値</strong>を超えたら → <strong>発火（スパイク）</strong>して、<span class="v">V</span> を0に戻す
@@ -609,9 +660,9 @@ hr.sep{border:none;border-top:1px dashed var(--line);margin:30px 0}
     <text x="14" y="174" font-size="11" fill="var(--muted)">0</text>
     <text x="8" y="64" font-size="11" fill="var(--muted)">1.0</text>
   </svg>
-  <p>約25ステップ（25ミリ秒）ごとに規則的に発火しています（ノイズを入れていない理想化した計算なので、きれいに等間隔になっています。実際のconvisは7.2節の通りここに乱数を加えるので、間隔は毎回少しずつ変わります）。</p>
+  <p>約25ステップ（25ミリ秒）ごとに規則的に発火しています（ノイズを入れていない理想化した計算なので、きれいに等間隔になっています。実際のconvisは7.3節の通りここに乱数を加えるので、間隔は毎回少しずつ変わります）。</p>
 
-  <h3>7.2　ノイズも最初から入っている</h3>
+  <h3>7.3　ノイズも最初から入っている</h3>
   <p>convis のスパイク生成は、膜電位の更新に毎回小さな乱数を足しています。これは「神経細胞は厳密に同じ入力でも、毎回まったく同じようには発火しない」という生物学的な事実を再現するためです。発火した後も、一定時間は発火できない<strong>不応期</strong>（この時間の長さにも乱数が使われる）が設けられています。</p>
 
   <div class="box point">
@@ -619,8 +670,8 @@ hr.sep{border:none;border-top:1px dashed var(--line);margin:30px 0}
     <p>スパイクの<strong>タイミング・場所</strong>は、ごくわずかな計算誤差でも敏感にずれます（しきい値ぎりぎりで水が溢れるかどうかが、ほんの少しの違いで変わるのと同じ）。一方で、ある程度の時間・範囲で発火した<strong>回数（頻度）</strong>は、個々のスパイクの位置ほどは崩れにくい性質があります。モデルの出力を評価するときは、どちらを見ているかを意識する必要があります。</p>
   </div>
 
-  <h3>7.3　実際のconvisコードでは（式を並べ替えると4章と同じ形になる）</h3>
-  <p>convisの実装（<code>GanglionSpiking</code>クラス）では、7.1節の「しきい値を超えたら0に戻す」の
+  <h3>7.4　実際のconvisコードでは（式を並べ替えると4章と同じ形になる）</h3>
+  <p>convisの実装（<code>GanglionSpiking</code>クラス）では、7.2節の「しきい値を超えたら0に戻す」の
   手前の積分部分が、ノイズ込みでこう書かれています：</p>
   <div class="eq"><span class="eqbox" data-tex="V_{\text{new}} \;=\; V + \big(I - g_L V + \text{noise}\big)\,\Delta"></span></div>
   <p>これを展開して並べ替えると：</p>
