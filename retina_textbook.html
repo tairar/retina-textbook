@@ -705,7 +705,9 @@ hr.sep{border:none;border-top:1px dashed var(--line);margin:30px 0}
 
   <div class="box point">
     <span class="label">論文の式(15)そのもの</span>
-    <p>これはVirtual Retina論文の式(15)（§2.3.2、原題"Synaptic current upon ganglion cells"）です。論文では<span class="v">T</span><sub>BG</sub>(<span class="v">v</span>)=<span class="v">T</span><sub>0</sub>²/(<span class="v">T</span><sub>0</sub>−<span class="v">λ</span><sub>BG</sub>(<span class="v">v</span>−<span class="v">V</span><sub>BG</sub>))（<span class="v">v</span>&lt;<span class="v">V</span><sub>BG</sub>のとき）と書かれています。右辺を<span class="v">i</span><sub>0</sub>/(1−<span class="v">λ</span><sub>G</sub>(<span class="v">x</span>−<span class="v">v</span><sub>0</sub>)/<span class="v">i</span><sub>0</sub>) の形に変形すると、<span class="v">T</span><sub>0</sub>=<span class="v">i</span><sub>0</sub>、<span class="v">λ</span><sub>BG</sub>=<span class="v">λ</span><sub>G</sub>、<span class="v">V</span><sub>BG</sub>=<span class="v">v</span><sub>0</sub> と置き換えただけでぴったり一致します。convisの変数名は論文の記号をそのまま読み替えたものです。</p>
+    <p>これはVirtual Retina論文の式(15)（§2.3.2、原題"Synaptic current upon ganglion cells"）です。論文の記号では（<span class="v">v</span>&lt;<span class="v">V</span><sub>BG</sub>のとき）：</p>
+    <div class="eq"><span class="eqbox" data-tex="T_{BG}(v) \;=\; \dfrac{T_0^2}{T_0 - \lambda_{BG}(v - V_{BG})}"></span></div>
+    <p>右辺を<span class="eqbox" data-display="false" data-tex="i_0/(1-\lambda_G(x-v_0)/i_0)" style="display:inline-block"></span>の形に変形すると、<span class="v">T</span><sub>0</sub>=<span class="v">i</span><sub>0</sub>、<span class="v">λ</span><sub>BG</sub>=<span class="v">λ</span><sub>G</sub>、<span class="v">V</span><sub>BG</sub>=<span class="v">v</span><sub>0</sub> と置き換えただけでぴったり一致します。convisの変数名は論文の記号をそのまま読み替えたものです。</p>
   </div>
 
   <h4>transient と spatial_pooling——今は使われていない2つのパラメータの本当の役割</h4>
@@ -724,10 +726,6 @@ hr.sep{border:none;border-top:1px dashed var(--line);margin:30px 0}
   <div class="eq"><span class="eqbox" data-tex="\text{total\_conductance} = g_L + \text{inhibition}, \qquad \text{attenuation\_map} = e^{-\Delta\cdot\text{total\_conductance}}"></span></div>
   <p><span class="v">g</span><sub>L</sub>（leak、漏れ）が6.1節の<span class="v">g</span><sub>0</sub>に対応する、常に一定の基本コンダクタンスです。6.1節では<span class="v">g</span>=<span class="v">g</span><sub>0</sub>+<span class="v">λV</span>²とまとめて書きましたが、実際には<span class="v">λV</span>²の部分は<code>inhibition</code>という名前で、瞬時の値ではなく後述のフィルタをかけた値が使われます。</p>
 
-  <div class="box point">
-    <span class="label">これも論文の式のままで、近似ではない</span>
-    <p>論文の式(9)-(11)（§2.3.1）はこうです：<span class="v">dV</span><sub>Bip</sub>/<span class="v">dt</span>=<span class="v">I</span><sub>OPL</sub>−<span class="v">g</span><sup>L</sup><sub>Am</sub><span class="v">V</span><sub>Bip</sub>、<span class="v">g</span><sup>L</sup><sub>Am</sub>=<span class="v">K</span>∗(<span class="v">g</span><sub>BA</sub>+<span class="v">λ</span><sub>BA</sub><span class="v">V</span><sub>Bip</sub>²)。<span class="v">K</span>は5.3節の<span class="v">K</span><sub>σ,τ</sub>と同じ形の結合カーネルで、論文§2.1.2によれば値の合計がちょうど1になるよう作られています。定数<span class="v">g</span><sub>BA</sub>を<span class="v">K</span>で畳み込んでも<span class="v">g</span><sub>BA</sub>のまま変わらないので、論文の式は<strong><span class="v">g</span><sub>BA</sub>+<span class="v">K</span>∗(<span class="v">λ</span><sub>BA</sub><span class="v">V</span><sub>Bip</sub>²)</strong>と書き直せます——これがconvisの「<span class="v">g</span><sub>L</sub>（畳み込みの外）＋<code>inhibition</code>（<span class="v">λV</span>²だけ畳み込んだもの）」と完全に一致します。convisの構造は論文の近似ではなく、数式として厳密に同じものです。</p>
-  </div>
   <div class="eq"><span class="eqbox" data-tex="E_\infty = \dfrac{\text{input\_amp}\times I_{OPL}}{\text{total\_conductance}}, \qquad V_{\text{bip}} = (V_{\text{prev}}-E_\infty)\times\text{attenuation\_map} + E_\infty"></span></div>
   <p>見比べると、<span class="v">E</span><sub>∞</sub>が6.4節の<span class="v">V</span><sub>∞</sub>、
   <span class="v">attenuation_map</span>が6.4節の<span class="v">e</span><sup>−<span class="v">gt</span></sup>に
@@ -746,6 +744,15 @@ hr.sep{border:none;border-top:1px dashed var(--line);margin:30px 0}
   この<code>inhibition</code>に<strong>空間方向の平均化</strong>（近傍ピクセルとの畳み込み）も
   かけます。「強い抑制がかかった細胞の隣も、少し抑制を受けやすくなる」という生理学的な
   設定です。</p>
+
+  <div class="box point">
+    <span class="label">これも論文の式のままで、近似ではない</span>
+    <p>論文の式(9)-(11)（§2.3.1）はこうです：</p>
+    <div class="eq"><span class="eqbox" data-tex="\dfrac{dV_{\text{Bip}}}{dt} = I_{OPL} - g^L_{\text{Am}} V_{\text{Bip}}, \qquad g^L_{\text{Am}} = K * (g_{BA} + \lambda_{BA} V_{\text{Bip}}^2)"></span></div>
+    <p><span class="v">K</span>は5.3節の<span class="v">K</span><sub>σ,τ</sub>と同じ形の結合カーネルで、論文§2.1.2によれば値の合計がちょうど1になるよう作られています。定数<span class="v">g</span><sub>BA</sub>を<span class="v">K</span>で畳み込んでも<span class="v">g</span><sub>BA</sub>のまま変わらないので、論文の式はこう書き直せます：</p>
+    <div class="eq"><span class="eqbox" data-tex="g^L_{\text{Am}} \;=\; g_{BA} \;+\; K*(\lambda_{BA} V_{\text{Bip}}^2)"></span></div>
+    <p>これがconvisの「<span class="v">g</span><sub>L</sub>（畳み込みの外）＋<code>inhibition</code>（<span class="v">λV</span>²だけ畳み込んだもの）」と完全に一致します。convisの構造は論文の近似ではなく、数式として厳密に同じものです。</p>
+  </div>
 
   <div class="box ex">
     <span class="label">平均を引いてから処理し、最後に足し戻す</span>
@@ -815,9 +822,9 @@ hr.sep{border:none;border-top:1px dashed var(--line);margin:30px 0}
     <p>実際の網膜にも、明るさの増加に反応するON型双極細胞・神経節細胞と、減少に反応する
     OFF型の細胞が、本当に別の細胞として存在します。これは単にconvisの実装上の都合ではありません。
     Virtual Retina論文は、OFF細胞の作り方をまさにこの形で説明しています（§2.4の直前）：
-    「OFF細胞をシミュレートしたいなら、式(13)の符号を反転させて
-    <span class="v">I</span><sub>Gang</sub>(<span class="v">x</span>,<span class="v">y</span>,<span class="v">t</span>)=<span class="v">T</span><sub>BG</sub>(−<span class="v">V</span><sup>trs</sup><sub>Bip</sub>)(<span class="v">x</span>,<span class="v">y</span>,<span class="v">t</span>) とすればよい」——
-    まさに convis の<span class="v">sign</span>=−1そのものです。</p>
+    「OFF細胞をシミュレートしたいなら、式(13)の符号を反転させて次の形にすればよい」：</p>
+    <div class="eq"><span class="eqbox" data-tex="I_{\text{Gang}}(x,y,t) \;=\; T_{BG}\big(-V^{\text{trs}}_{\text{Bip}}\big)(x,y,t)"></span></div>
+    <p>まさに convis の<span class="v">sign</span>=−1そのものです。</p>
   </div>
 
   <p>実際にconvisを動かすと、ON細胞の出力が<code>output.array(0)</code>（または
@@ -864,7 +871,9 @@ hr.sep{border:none;border-top:1px dashed var(--line);margin:30px 0}
 
   <div class="box ex">
     <span class="label">論文の式(16)（§2.4.1）と、数値までぴったり一致する</span>
-    <p>論文のLIFモデルは<span class="v">dV</span><sub>n</sub>/<span class="v">dt</span>=<span class="v">I</span><sub>Gang</sub>−<span class="v">g</span><sup>L</sup><span class="v">V</span><sub>n</sub>+<span class="v">η</span><sub>v</sub>、しきい値<span class="v">V</span><sub>n</sub>=1で発火、不応期は平均<span class="v">N</span>(3ms, 1ms)の正規分布——これはconvisの既定値（<span class="v">θ</span>=1.0、<code>refr_mu</code>=0.003秒、<code>refr_sigma</code>=0.001秒）と記号だけでなく数値まで完全に一致します。論文は「時定数1/<span class="v">g</span><sup>L</sup>は典型的に20ms」とも書いていますが、convisの既定<span class="v">g</span><sub>L</sub>=50Hzで計算すると1/50=0.02秒=20ms——これも一致します。</p>
+    <p>論文のLIFモデルはこうです（しきい値<span class="v">V</span><sub>n</sub>=1で発火、不応期は平均<span class="v">N</span>(3ms, 1ms)の正規分布）：</p>
+    <div class="eq"><span class="eqbox" data-tex="\dfrac{dV_n}{dt} \;=\; I_{\text{Gang}} - g^L V_n + \eta_v"></span></div>
+    <p>これはconvisの既定値（<span class="v">θ</span>=1.0、<code>refr_mu</code>=0.003秒、<code>refr_sigma</code>=0.001秒）と記号だけでなく数値まで完全に一致します。論文は「時定数1/<span class="v">g</span><sup>L</sup>は典型的に20ms」とも書いていますが、convisの既定<span class="v">g</span><sub>L</sub>=50Hzで計算すると1/50=0.02秒=20ms——これも一致します。</p>
   </div>
 
   <h3>7.4　実際のconvisコードでは（式を並べ替えると4章と同じ形になる）</h3>
