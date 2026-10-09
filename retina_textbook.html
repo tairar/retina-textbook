@@ -514,8 +514,13 @@ hr.sep{border:none;border-top:1px dashed var(--line);margin:30px 0}
   <h4>変数を置き換えて、知っている形に戻す</h4>
   <p><span class="v">w</span> = <span class="v">z</span> − <span class="v">x</span>（<span class="v">x</span> は区間内で一定とする）と置くと：</p>
   <div class="eq"><span class="eqbox" data-tex="\dfrac{dw}{dt} = \dfrac{dz}{dt} = \dfrac{x-z}{\tau} = -\dfrac{z-x}{\tau} = -\dfrac{w}{\tau}"></span></div>
-  <p>見覚えのある形（1.9節）に戻りました。だから答えも同じパターンで書けます：</p>
-  <div class="eq"><span class="eqbox" data-tex="w(t) = w_0\,e^{-t/\tau} \quad\Longrightarrow\quad z(t) = x + (z_0-x)\,e^{-t/\tau}"></span></div>
+  <p>これは1.9節の <span class="v">dz</span>/<span class="v">dt</span>=−<span class="v">z</span>/<span class="v">τ</span> と、<span class="v">z</span>を<span class="v">w</span>に書き換えただけの、全く同じ式です。なので1.9節でやったのと同じ「<span class="v">w</span>(<span class="v">t</span>)=<span class="v">w</span><sub>0</sub>·<span class="v">e</span><sup>−<span class="v">t</span>/<span class="v">τ</span></sup> という形を代入して確かめる」が、そのまま使えます（計算は1.9節と一字一句同じなので、ここでは繰り返しません）：</p>
+  <div class="eq"><span class="eqbox" data-tex="w(t) \;=\; w_0\,e^{-t/\tau}"></span></div>
+
+  <p>最後に、<span class="v">w</span>を元の<span class="v">z</span>に戻します。<span class="v">w</span>=<span class="v">z</span>−<span class="v">x</span> だったので <span class="v">z</span>=<span class="v">w</span>+<span class="v">x</span>。また <span class="v">t</span>=0 のとき <span class="v">w</span><sub>0</sub>=<span class="v">w</span>(0)=<span class="v">z</span>(0)−<span class="v">x</span>=<span class="v">z</span><sub>0</sub>−<span class="v">x</span> なので、<span class="v">w</span><sub>0</sub>も<span class="v">z</span><sub>0</sub>で書き換えられます：</p>
+  <div class="eq"><span class="eqbox" data-tex="z(t) \;=\; w(t) + x \;=\; w_0\,e^{-t/\tau} + x \;=\; (z_0-x)\,e^{-t/\tau} + x"></span></div>
+  <p>項の順番を入れ替えて整理すると：</p>
+  <div class="eq"><span class="eqbox" data-tex="z(t) \;=\; x + (z_0-x)\,e^{-t/\tau}"></span></div>
 
   <h4>1ステップ（幅Δ）だけ時間を進める</h4>
   <p><span class="v">z</span><sub>0</sub> を1つ前の出力 <span class="v">z</span>[<span class="v">k</span>−1]、<span class="v">t</span>=<span class="v">Δ</span> 経過後の値を <span class="v">z</span>[<span class="v">k</span>] として代入すると：</p>
