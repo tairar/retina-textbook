@@ -442,6 +442,38 @@ hr.sep{border:none;border-top:1px dashed var(--line);margin:30px 0}
     <span class="label">4.1節の式と、完全に一致</span>
     <p>これは4.1節で天下り的に示した漸化式そのものです。つまり <code>center_E</code> の1行は、思いつきの近似ではなく、<strong>「漏れのある積分」という微分方程式を、1タイムステップぶんだけ厳密に解いた結果</strong>です。しかも <span class="v">α</span>=<span class="v">e</span><sup>−<span class="v">Δ</span>/<span class="v">τ</span></sup> という具体的な形まで、1.7節の指数関数の性質から導けました。</p>
   </div>
+
+  <h3>4.5　center_undershoot——引き算でハイパスを作る</h3>
+  <p>5章で引用するOPLの処理は <code>center_G → center_E → center_undershoot</code> という順で
+  進みます。最後の<code>center_undershoot</code>（<code>TemporalHighPassFilterRecursive</code>クラス）は
+  何をしているのか、ここで見ておきます。</p>
+  <p>発想はシンプルです。<strong>ハイパスフィルタ＝入力から、ローパス（なめらかにした版）を引いたもの</strong>。
+  電気回路でいう「直流カット」と同じ考え方です：</p>
+  <div class="eq"><span class="eqbox" data-tex="\text{output} \;=\; x \;-\; k\cdot\dfrac{\text{lowpass}(x)}{\text{norm}}"></span></div>
+  <p><span class="v">lowpass</span>(<span class="v">x</span>)の計算自体は、4.1節のcenter_Eと全く同じ漸化式を
+  内部で使っています。<span class="v">k</span>（既定0.8）は「どれだけ引くか」の割合——
+  <span class="v">k</span>=1なら入力の低周波成分を完全に取り除く「純粋なハイパス」、
+  <span class="v">k</span>=0.8だと8割だけ引く、ということです。</p>
+
+  <div class="box ex">
+    <span class="label">地味だが重要な違い：中のローパスには1ステップ遅れた入力が使われる</span>
+    <p>実際のコードをよく見ると、ループの中で<code>x1</code>（ローパス計算に使う入力）を
+    <strong>使ってから</strong>次の値に更新しています。つまりステップ<span class="v">k</span>の
+    ローパス計算に使われる入力は<span class="v">x</span>[<span class="v">k</span>]ではなく
+    <span class="v">x</span>[<span class="v">k</span>−1]——1ステップ前の値です。
+    4.1節のcenter_Eが<span class="v">x</span>[<span class="v">k</span>]をそのまま使うのとは違います。</p>
+    <p>実際にインパルス（1点だけ1、他は0）を入れて確かめると、この違いがはっきり見えます：
+    インパルスが来た瞬間（<span class="v">t</span>=5）は内部のローパスがまだ1つ前
+    （値0）しか見ていないので、何も引かれず出力はそのまま1.0。1ステップ後
+    （<span class="v">t</span>=6）になって初めてローパス側がインパルスを取り込み、
+    そこでようやく引き算が効いて出力がわずかに負（約−0.008）になります——
+    「へこみ」がインパルスの1ステップ後に遅れて現れるのは、この内部の遅延のためです。</p>
+  </div>
+
+  <p>OPLのcenter経路では<span class="v">τ</span>=0.1秒、<span class="v">k</span>=0.8が既定値です
+  （5章の<code>HalfRecursiveOPLFilter</code>）。center_Gでぼかし、center_Eでなめらかにし、
+  最後にcenter_undershootで「急な変化の直後だけ強調し、すぐに落ち着く」という応答を作る
+  ——3段階を通して、網膜が明るさの<strong>変化</strong>に敏感に反応する仕組みが出来上がります。</p>
 </section>
 
 <!-- ============ CH5 ============ -->
