@@ -676,6 +676,38 @@ hr.sep{border:none;border-top:1px dashed var(--line);margin:30px 0}
   </div>
   <p>出力（<span class="v">V</span>）が、次の瞬間の自分自身の変化のしかた（<span class="v">g</span>）に影響する——これが<strong>フィードバック</strong>です。4章のセンター・サラウンドのフィルタは「係数が常に一定」でしたが、ここでは係数自体が出力次第で変わります。これが双極細胞の計算がOPLより難しい理由です。</p>
 
+  <h4>実際に動かすと「行き過ぎてから落ち着く」のが見える</h4>
+  <p>このフィードバックが本当に何をするのか、実際のconvisの<code>Bipolar</code>クラスを
+  動かして確かめます。入力をt=10で急に強くして（0.01→5.0に一段ジャンプ）、それ以降はずっと
+  一定に保ちます。なお既定では<span class="v">λ</span><sub>amp</sub>（フィードバックの強さ）が
+  0でこの仕組み自体が働かないので、ここでは<span class="v">λ</span><sub>amp</sub>=50に
+  設定して効果が見えるようにしています：</p>
+  <svg viewBox="0 0 480 200" style="width:100%;max-width:480px;display:block;margin:18px auto" role="img" aria-label="Bipolarのフィードバックによるオーバーシュートのグラフ">
+    <line x1="40" y1="170" x2="450" y2="170" stroke="var(--ink-soft)" stroke-width="1"/>
+    <line x1="177.9" y1="20" x2="177.9" y2="178" stroke="var(--muted)" stroke-width="1" stroke-dasharray="4 3"/>
+    <text x="182" y="30" font-size="11" fill="var(--muted)">t=10：入力が0.01→5.0へ急上昇（以降は一定）</text>
+    <line x1="40" y1="65.2" x2="246.9" y2="65.2" stroke="var(--accent)" stroke-width="1" stroke-dasharray="3 2"/>
+    <text x="252" y="62" font-size="11" fill="var(--accent)">ピーク 1.05（t=15）</text>
+    <line x1="260" y1="137.9" x2="440" y2="137.9" stroke="var(--good)" stroke-width="1" stroke-dasharray="3 2"/>
+    <text x="264" y="152" font-size="11" fill="var(--good)">最終的に0.32まで低下</text>
+    <polyline points="40.0,170.0 53.8,169.9 67.6,169.9 81.4,169.8 95.2,169.8 109.0,169.7 122.8,169.7 136.6,169.7 150.3,169.6 164.1,169.6 177.9,145.3 191.7,122.1 205.5,100.5 219.3,81.8 233.1,69.0 246.9,65.2 260.7,71.5 274.5,84.7 288.3,99.5 302.1,111.9 315.9,120.8 329.7,126.6 343.4,130.3 357.2,132.7 371.0,134.3 384.8,135.4 398.6,136.2 412.4,136.8 426.2,137.4 440.0,137.9" fill="none" stroke="var(--indigo)" stroke-width="2.3"/>
+    <text x="14" y="174" font-size="11" fill="var(--muted)">0</text>
+  </svg>
+  <p>入力はt=10以降<strong>ずっと一定</strong>（5.0）なのに、<span class="v">V</span><sub>bip</sub>
+  （藍色の線）は一度1.05まで跳ね上がった後、<code>inhibition</code>が効いてきて0.32くらいまで
+  下がって落ち着きます。<strong>強い信号が来た直後は普通に反応するが、数ステップのうちに
+  自動的に感度が下がる</strong>——これがコントラストゲイン制御の実際の挙動です。</p>
+
+  <div class="box ex">
+    <span class="label">なぜ数ステップ遅れて効き始めるのか</span>
+    <p><code>inhibition</code>の計算には<strong>1つ前のステップの<span class="v">V</span><sub>bip</sub></strong>
+    が使われます（コードの代入順序を見ると、<code>inhibition</code>を計算する時点では、まだ
+    その回で新しく求めた<span class="v">V</span><sub>bip</sub>に状態が更新されていません——
+    4.6節のcenter_undershootで見た「1ステップ遅延」と同じパターンです）。さらにその
+    <code>inhibition</code>自体も4.5節と同じ漸化式で時間方向になめらかにされているため、
+    入力が変化してから実際に効果が表れるまでに数ステップのタイムラグがあります。</p>
+  </div>
+
   <h3>6.4　<span class="v">g</span> が一瞬だけ一定だとみなして、式を解いてみる</h3>
   <p>6.3節の <span class="v">g</span> は本当は <span class="v">V</span> 次第で動きますが、ごく短い1瞬の間だけなら「その瞬間の <span class="v">g</span> の値で一定」とみなせます。すると6.1節の式は、4.5節で解いたのと<strong>まったく同じ形</strong>になります（<span class="v">x</span>=<span class="v">I</span><sub>OPL</sub>/<span class="v">g</span>、<span class="v">τ</span>=1/<span class="v">g</span> と置き換えただけ）：</p>
   <div class="eq"><span class="eqbox" data-tex="V(t) \;=\; V_\infty + (V_0-V_\infty)\,e^{-gt}, \qquad V_\infty = \dfrac{I_{OPL}}{g}"></span></div>
