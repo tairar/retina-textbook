@@ -810,6 +810,21 @@ hr.sep{border:none;border-top:1px dashed var(--line);margin:30px 0}
   強さ）が0になっており、このフィードバック経路は標準では実質的に働きません。それでも
   <span class="v">g</span><sub>L</sub>（基本の漏れ）だけで6.4節の「漏れのある積分」は常に動いており、
   双極細胞の膜電位はいつでもこの仕組みで計算されています。</p>
+
+  <div class="box point">
+    <span class="label"><span class="v">g</span><sub>L</sub>は固定スカラーの学習可能パラメータ、<code>inhibition</code>は動的な状態</span>
+    <p>実際のconvisコードで<code>g_leak</code>（<span class="v">g</span><sub>L</sub>）の型を見ると、
+    <code>convis.variables.Parameter</code>——既定で<code>requires_grad=True</code>になる型です。
+    これはConvisの売りである「自動微分でパラメータや入力自体を最適化できる」仕組み（1.1節で
+    触れたConvis論文の話）の対象になれる設計、という意味です。ただし形は<code>torch.Size([1])</code>
+    の単一スカラー（全ピクセル共通、既定値50Hz、<code>retina_config_key='bipolar-inert-leaks__Hz'</code>）
+    で、1回の<code>.run()</code>の間はずっと一定のまま変わりません。</p>
+    <p>対照的に、この節で見てきた<code>inhibition</code>は学習パラメータではなく、ピクセルごとに
+    値が違う配列で、毎ステップ計算し直される状態です。つまり<code>total_conductance = g_L +
+    inhibition</code>は、「学習対象になりうる定数」と「学習対象ではない、毎ステップ動く状態」を
+    足し合わせたもの——ただしこの教科書のどの実験でも<code>.backward()</code>は一度も呼んでおらず、
+    <span class="v">g</span><sub>L</sub>を実際に学習させたことはありません。</p>
+  </div>
 </section>
 
 <!-- ============ CH7 ============ -->
