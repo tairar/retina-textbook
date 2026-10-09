@@ -367,6 +367,30 @@ hr.sep{border:none;border-top:1px dashed var(--line);margin:30px 0}
     <span class="label">OPLでの役割</span>
     <p>convis では「狭い σ」のガウシアンと「広い σ」のガウシアンの2種類を使います。狭い方を<strong>センター</strong>、広い方を<strong>サラウンド</strong>と呼び、次の5章でこの2つの差分を取ります。</p>
   </div>
+
+  <h3>3.3　カーネルの大きさはどう決まるか（切り捨て半径）</h3>
+  <p><span class="v">g</span>(<span class="v">u</span>) は数式の上では<span class="v">u</span>が±∞までずっと（ごくわずかな値を残して）続きます。でも実際にコンピュータでカーネルを作るときは、どこかで打ち切って有限のマス目（3×3とか11×11とか）にしないといけません。convisは「ある小さなしきい値 <span class="v">ε</span> より値が小さくなったら、そこから先は0とみなして切り捨てる」というルールでカーネルの大きさを決めています。</p>
+
+  <div class="box bio">
+    <span class="label">寄り道：対数（log）はexpの逆演算</span>
+    <p>この先の式に<span class="v">log</span>（対数）が1回だけ出てきます。1.7節の<span class="v">e</span><sup><span class="v">x</span></sup>の逆で、「<span class="v">e</span>を何乗したらこの値になるか」を答える操作です：<span class="v">e</span><sup><span class="v">y</span></sup>=<span class="v">z</span> のとき <span class="v">y</span>=log(<span class="v">z</span>)。それだけです。</p>
+  </div>
+
+  <p>切り捨てる半径 <span class="v">u</span>=<span class="v">x</span><sub>min</sub>（ピクセル数）は、「そこでの高さ<span class="v">g</span>(<span class="v">x</span><sub>min</sub>)がちょうど<span class="v">ε</span>になる」という条件から決まります。3.2節の<span class="v">g</span>(<span class="v">u</span>)の式で、<span class="v">a</span>=1/(<span class="v">σ</span>√2π)（中心<span class="v">u</span>=0での高さ）と置くと：</p>
+  <div class="eq"><span class="eqbox" data-tex="a\cdot\exp\!\left(-\dfrac{x_{\min}^2}{2\sigma^2}\right) = \varepsilon"></span></div>
+  <p>両辺を<span class="v">a</span>で割って、両辺のlogを取ると（expとlogは逆演算なので、指数の肩の部分だけが残ります）：</p>
+  <div class="eq"><span class="eqbox" data-tex="-\dfrac{x_{\min}^2}{2\sigma^2} = \log\!\left(\dfrac{\varepsilon}{a}\right) \quad\Longrightarrow\quad x_{\min} = \sqrt{-2\sigma^2\log(\varepsilon/a)}"></span></div>
+  <p>（実際のconvisのコードはこれを<code>np.ceil</code>で切り上げて整数ピクセルにします。）convisの既定では<span class="v">ε</span>=0.001（<code>filter_epsilon</code>という設定値）。5.5節のσ値を実際に入れて計算すると：</p>
+
+  <div class="box ex">
+    <span class="label">実測：center・surroundのσで計算すると、既に見た3×3・11×11にちゃんと一致する</span>
+    <div class="tbl-wrap"><table>
+      <tr><th></th><th><span class="v">σ</span>（px）</th><th><span class="v">a</span>=1/(<span class="v">σ</span>√2π)</th><th><span class="v">x</span><sub>min</sub></th><th>カーネル幅</th></tr>
+      <tr><td>center</td><td class="num">0.5</td><td class="num">0.798</td><td class="num">2</td><td class="num">2×2+1 = 3</td></tr>
+      <tr><td>surround</td><td class="num">1.5</td><td class="num">0.266</td><td class="num">6</td><td class="num">2×6−1 = 11</td></tr>
+    </table></div>
+    <p>5.5節で実測した3×3・11×11のカーネルサイズは、この式からピッタリ出てきます。「度」という単位から始まって、ピクセルへの変換（5.5節）、そして切り捨て半径（この節）まで辿ると、カーネルの形が何も隠されていない、ただの計算の積み重ねだと分かります。</p>
+  </div>
 </section>
 
 <!-- ============ CH4 ============ -->
@@ -538,7 +562,7 @@ hr.sep{border:none;border-top:1px dashed var(--line);margin:30px 0}
   </div>
 
   <h4>実際のσ値でセンター・サラウンドを描いてみる</h4>
-  <p>3.4節のガウシアンに、5.4節の既定値 <span class="v">σ</span><sub>C</sub>=0.05°、<span class="v">σ</span><sub>S</sub>=0.15° を入れて実際に計算すると、センター（細く高い）とサラウンド（広く低い）、その差（中央が盛り上がり、両脇がへこむ「メキシカンハット」形）が下のようになります。</p>
+  <p>3.2節のガウシアンに、5.4節の既定値 <span class="v">σ</span><sub>C</sub>=0.05°、<span class="v">σ</span><sub>S</sub>=0.15° を入れて実際に計算すると、センター（細く高い）とサラウンド（広く低い）、その差（中央が盛り上がり、両脇がへこむ「メキシカンハット」形）が下のようになります。</p>
   <svg viewBox="0 0 480 240" style="width:100%;max-width:480px;display:block;margin:18px auto" role="img" aria-label="センター・サラウンド・その差のグラフ">
     <line x1="40" y1="190" x2="450" y2="190" stroke="var(--ink-soft)" stroke-width="1"/>
     <line x1="240" y1="20" x2="240" y2="230" stroke="var(--muted)" stroke-width="1" stroke-dasharray="4 3"/>
@@ -584,7 +608,7 @@ hr.sep{border:none;border-top:1px dashed var(--line);margin:30px 0}
   <p>既定値は<strong>1度あたり10ピクセル</strong>。これを使うと：</p>
   <div class="eq"><span class="eqbox" data-tex="\sigma_C = 0.05^\circ \times 10\,\text{px/}^\circ = 0.5\,\text{px}, \qquad \sigma_S = 0.15^\circ \times 10\,\text{px/}^\circ = 1.5\,\text{px}"></span></div>
   <p>3章・4章で実測したカーネルサイズ（center_Gが3×3、surround_Gが11×11）は、
-  まさにこの0.5px・1.5pxという標準偏差から3章の切り捨て半径の式で決まったものでした。
+  まさにこの0.5px・1.5pxという標準偏差から3.3節の切り捨て半径の式で決まったものでした。
   「度」という見慣れない単位も、たどっていけばちゃんとピクセルの世界に接続しています。</p>
 </section>
 
@@ -655,6 +679,7 @@ hr.sep{border:none;border-top:1px dashed var(--line);margin:30px 0}
   を本当に実装しているのは、別の<code>Bipolar</code>クラスです。その中身は、6.4節の解を
   1ステップぶんだけ、<strong>そのまま</strong>使っています：</p>
   <div class="eq"><span class="eqbox" data-tex="\text{total\_conductance} = g_L + \text{inhibition}, \qquad \text{attenuation\_map} = e^{-\Delta\cdot\text{total\_conductance}}"></span></div>
+  <p><span class="v">g</span><sub>L</sub>（leak、漏れ）が6.1節の<span class="v">g</span><sub>0</sub>に対応する、常に一定の基本コンダクタンスです。6.1節では<span class="v">g</span>=<span class="v">g</span><sub>0</sub>+<span class="v">λV</span>²とまとめて書きましたが、実際には<span class="v">λV</span>²の部分は<code>inhibition</code>という名前で、瞬時の値ではなく後述のフィルタをかけた値が使われます。</p>
   <div class="eq"><span class="eqbox" data-tex="E_\infty = \dfrac{\text{input\_amp}\times I_{OPL}}{\text{total\_conductance}}, \qquad V_{\text{bip}} = (V_{\text{prev}}-E_\infty)\times\text{attenuation\_map} + E_\infty"></span></div>
   <p>見比べると、<span class="v">E</span><sub>∞</sub>が6.4節の<span class="v">V</span><sub>∞</sub>、
   <span class="v">attenuation_map</span>が6.4節の<span class="v">e</span><sup>−<span class="v">gt</span></sup>に
@@ -741,7 +766,7 @@ hr.sep{border:none;border-top:1px dashed var(--line);margin:30px 0}
     この2系統を、同じ計算式を使い回しながら符号だけ変えて再現する実装上の工夫です。</p>
   </div>
 
-  <p>このノートブックのコードでは、ON細胞の出力が<code>output.array(0)</code>（または
+  <p>実際にconvisを動かすと、ON細胞の出力が<code>output.array(0)</code>（または
   <code>gang_0_spikes</code>）、OFF細胞の出力が<code>output.array(1)</code>（または
   <code>gang_1_spikes</code>）という決まった対応になっています
   （`convis/convis/retina.py:165`：<code>keys=['ganglion_spikes_ON','ganglion_spikes_OFF']</code>）。
@@ -815,23 +840,27 @@ hr.sep{border:none;border-top:1px dashed var(--line);margin:30px 0}
   <p class="lead">最後に、この本で出てきた式を一つの流れとして並べ直します。</p>
 
   <div class="flow vert">
-    <div class="node"><b>① 空間のぼかし（3章）</b><span><span class="v">G</span><sub><span class="v">σ</span></sub>(<span class="v">x</span>,<span class="v">y</span>) — 加重平均の重み表</span></div>
+    <div class="node"><b>① 空間のぼかし（3章）</b><span><span class="v">G</span><sub><span class="v">σ</span></sub>(<span class="v">x</span>,<span class="v">y</span>) — 加重平均の重み表、σから切り捨て半径で大きさが決まる</span></div>
     <div class="arrow">↓</div>
-    <div class="node"><b>② 時間のぼかし（4章）</b><span><span class="v">z</span>[<span class="v">k</span>]=(1−α)x[k]+αz[k−1] — 今とさっきを混ぜる</span></div>
+    <div class="node"><b>② 時間のぼかし＋undershoot（4章）</b><span><span class="v">z</span>[<span class="v">k</span>]=(1−α)x[k]+αz[k−1] でなめらかに、<span class="v">x</span>−<span class="v">k</span>·lowpass(<span class="v">x</span>)で変化だけ強調</span></div>
     <div class="arrow">↓</div>
-    <div class="node"><b>③ センター − サラウンド（5章）</b><span><span class="v">I</span><sub>OPL</sub>=λ(C−w·S) — 引き算でコントラストに</span></div>
+    <div class="node"><b>③ センター − サラウンド（5章）</b><span><span class="v">I</span><sub>OPL</sub>=λ(C−w·S) — 引き算でコントラストに（ここまでOPL、1本の経路）</span></div>
     <div class="arrow">↓</div>
-    <div class="node"><b>④ 非線形フィードバック（6章）</b><span>g=g₀+λV² — 強い信号ほど感度を下げる</span></div>
+    <div class="node"><b>④ 漏れ積分＋フィードバック（6章、Bipolar）</b><span><span class="v">V</span><sub>bip</sub>は6.4節の解の毎ステップ再適用、g=g<sub>L</sub>+inhibitionで感度調整（既定では実質g<sub>L</sub>のみ）</span></div>
     <div class="arrow">↓</div>
-    <div class="node"><b>⑤ しきい値とスパイク（7章）</b><span>V&gt;しきい値 → 発火してリセット、ノイズあり</span></div>
+    <div class="node"><b>⑤ 静的非線形性（6.5節、GanglionInput）</b><span>n(x)——ここでsignを±1に分けてON/OFFの2経路に分岐</span></div>
+    <div class="arrow">↓</div>
+    <div class="node"><b>⑥ しきい値とスパイク（7章、GanglionSpiking）</b><span>V&gt;しきい値 → 発火してリセット、ノイズあり（ON/OFF、それぞれ独立に）</span></div>
   </div>
+  <p style="font-size:14.5px;color:var(--ink-soft)">①〜④までは1本の経路ですが、⑤のGanglionInputで<span class="v">sign</span>=±1によってON経路・OFF経路の2つに分かれ（7.1節）、⑥のGanglionSpikingもそれぞれ独立に計算されます。最終的な出力は、この2つのスパイク列の組です。</p>
 
   <h3>難しさの質の違い</h3>
   <div class="tbl-wrap"><table>
     <tr><th>段階</th><th>性質</th><th>この本の章</th></tr>
     <tr><td>①〜③（OPL）</td><td>線形（足し算・定数倍だけ）</td><td>3〜5章</td></tr>
-    <tr><td>④（双極細胞）</td><td>非線形フィードバック</td><td>6章</td></tr>
-    <tr><td>⑤（神経節細胞）</td><td>非線形＋しきい値＋乱数</td><td>7章</td></tr>
+    <tr><td>④（双極細胞、Bipolar）</td><td>漏れ積分＋（既定では不活性の）非線形フィードバック</td><td>6章</td></tr>
+    <tr><td>⑤（GanglionInput）</td><td>静的な非線形性、フィードバックなし</td><td>6.5節・7.1節</td></tr>
+    <tr><td>⑥（GanglionSpiking）</td><td>非線形＋しきい値＋乱数</td><td>7章</td></tr>
   </table></div>
 
   <div class="box point">
