@@ -146,6 +146,13 @@ pre{background:var(--code-bg);border:1px solid var(--line);border-radius:10px;pa
 .flow.vert{flex-direction:column;align-items:stretch}
 .flow.vert .arrow{align-self:center;padding:2px 0}
 
+/* ---- 章頭の「パイプライン上の位置」ミニマップ ---- */
+.stage-map{display:flex;align-items:center;flex-wrap:wrap;gap:3px;margin:4px 0 22px;font-family:"JetBrains Mono",monospace}
+.stage-map .stage{padding:5px 8px;border-radius:7px;border:1px solid var(--line);background:var(--paper);color:var(--muted);font-size:11px;white-space:nowrap;line-height:1.3}
+.stage-map .stage.active{border-color:var(--accent);background:var(--accent-soft);color:var(--ink);font-weight:700}
+.stage-map .sep{color:var(--line);font-size:11px;padding:0 1px}
+.stage-caption{font-size:13px;color:var(--ink-soft);margin:-14px 0 22px}
+
 .kernel-grid{display:grid;grid-template-columns:repeat(3,56px);gap:4px;margin:16px 0;font-family:"JetBrains Mono",monospace}
 .kernel-grid div{background:var(--code-bg);border:1px solid var(--line);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:12.5px;aspect-ratio:1}
 .kernel-grid div.peak{background:var(--accent-soft);border-color:var(--accent);font-weight:700;color:var(--accent)}
@@ -233,6 +240,9 @@ hr.sep{border:none;border-top:1px dashed var(--line);margin:30px 0}
   <h2>準備運動：出てくる数学の道具</h2>
   <p class="lead">先に道具箱を揃えます。ここで曖昧でも、後の章で具体例と一緒にもう一度出てくるので安心してください。</p>
 
+  <div class="stage-map" role="img" aria-label="パイプライン上の位置"><span class="stage">①空間ぼかし</span><span class="sep">→</span><span class="stage">②時間ぼかし/undershoot</span><span class="sep">→</span><span class="stage">③センター-サラウンド</span><span class="sep">→</span><span class="stage">④Bipolar(漏れ積分)</span><span class="sep">→</span><span class="stage">⑤GanglionInput(非線形性)</span><span class="sep">→</span><span class="stage">⑥GanglionSpiking(スパイク)</span></div>
+  <p class="stage-caption">この章はパイプラインのどの段の説明でもありません——後の章で使う数学の道具箱です。</p>
+
   <h3>1.1　関数は「数を入れると数が出てくる機械」</h3>
   <p><span class="v">f(x)</span> は「<span class="v">x</span> という数を入れると、何かルールに従って別の数を返す機械」というだけの意味です。<span class="v">x</span> に 3 を入れたときの出力を <span class="v">f(3)</span> と書きます。この本では <span class="v">x</span> の代わりに、画素の明るさや時刻を表す記号がたくさん出てきますが、意味は同じです。</p>
 
@@ -317,6 +327,9 @@ hr.sep{border:none;border-top:1px dashed var(--line);margin:30px 0}
   <span class="kicker">Chapter 02</span>
   <h2>網膜モデル全体の地図</h2>
   <p class="lead">細部に入る前に、生物の網膜が何をしているかを一段落で。</p>
+
+  <div class="stage-map" role="img" aria-label="パイプライン上の位置"><span class="stage active">①空間ぼかし</span><span class="sep">→</span><span class="stage active">②時間ぼかし/undershoot</span><span class="sep">→</span><span class="stage active">③センター-サラウンド</span><span class="sep">→</span><span class="stage active">④Bipolar(漏れ積分)</span><span class="sep">→</span><span class="stage active">⑤GanglionInput(非線形性)</span><span class="sep">→</span><span class="stage active">⑥GanglionSpiking(スパイク)</span></div>
+  <p class="stage-caption">この章はパイプライン全体の見取り図です。①〜⑥、全ての段にざっと触れます。</p>
   <p>目に入った光は、まず<strong>光受容体（視細胞）</strong>という光センサーの層に当たります。その情報は<strong>水平細胞</strong>という「まわりの明るさの平均をとる」細胞を経由して<strong>双極細胞</strong>に伝わり、さらに<strong>神経節細胞</strong>が最終的に脳へ送る信号（スパイク）を作ります。</p>
   <p>VirtualRetina / convis はこの4段階を、それぞれ数式に置き換えてシミュレートします。</p>
 
@@ -338,6 +351,9 @@ hr.sep{border:none;border-top:1px dashed var(--line);margin:30px 0}
   <span class="kicker">Chapter 03</span>
   <h2>畳み込みとガウシアンフィルタ</h2>
   <p class="lead">OPLの最初の一歩は「画像をぼかす」処理です。まずこの「ぼかす」を数式でどう書くかから始めます。</p>
+
+  <div class="stage-map" role="img" aria-label="パイプライン上の位置"><span class="stage active">①空間ぼかし</span><span class="sep">→</span><span class="stage">②時間ぼかし/undershoot</span><span class="sep">→</span><span class="stage">③センター-サラウンド</span><span class="sep">→</span><span class="stage">④Bipolar(漏れ積分)</span><span class="sep">→</span><span class="stage">⑤GanglionInput(非線形性)</span><span class="sep">→</span><span class="stage">⑥GanglionSpiking(スパイク)</span></div>
+  <p class="stage-caption">この章が扱うのは①（空間のぼかし）です。</p>
 
   <h3>3.1　ぼかすとは「近所の画素の加重平均」</h3>
   <p>ある画素を「ぼかした」値にするには、その画素だけでなく<strong>まわりの画素も混ぜて平均する</strong>ことをします。このとき、真ん中に近い画素ほど強く、遠い画素ほど弱く効かせると、自然なぼけ方になります。この「位置ごとの重み表」を<strong>カーネル</strong>と呼びます。</p>
@@ -398,6 +414,9 @@ hr.sep{border:none;border-top:1px dashed var(--line);margin:30px 0}
   <span class="kicker">Chapter 04</span>
   <h2>時間のフィルタ：指数移動平均</h2>
   <p class="lead">3章のぼかしは「空間」方向でした。ここでは同じ考え方を「時間」方向に使います。急な輝度変化を、なめらかな変化に変える処理です。</p>
+
+  <div class="stage-map" role="img" aria-label="パイプライン上の位置"><span class="stage">①空間ぼかし</span><span class="sep">→</span><span class="stage active">②時間ぼかし/undershoot</span><span class="sep">→</span><span class="stage">③センター-サラウンド</span><span class="sep">→</span><span class="stage">④Bipolar(漏れ積分)</span><span class="sep">→</span><span class="stage">⑤GanglionInput(非線形性)</span><span class="sep">→</span><span class="stage">⑥GanglionSpiking(スパイク)</span></div>
+  <p class="stage-caption">この章が扱うのは②（時間のぼかし・undershoot）です。</p>
 
   <h3>4.1　そもそもローパス・ハイパスって何？</h3>
   <p>この先「ローパスフィルタ」「ハイパスフィルタ」という言葉が繰り返し出てきます。数式に入る前に、
@@ -547,6 +566,9 @@ hr.sep{border:none;border-top:1px dashed var(--line);margin:30px 0}
   <h2>OPL — 中心と周辺の差分</h2>
   <p class="lead">3章（空間のぼかし）と4章（時間のぼかし）を組み合わせて、OPL本体を組み立てます。</p>
 
+  <div class="stage-map" role="img" aria-label="パイプライン上の位置"><span class="stage">①空間ぼかし</span><span class="sep">→</span><span class="stage">②時間ぼかし/undershoot</span><span class="sep">→</span><span class="stage active">③センター-サラウンド</span><span class="sep">→</span><span class="stage">④Bipolar(漏れ積分)</span><span class="sep">→</span><span class="stage">⑤GanglionInput(非線形性)</span><span class="sep">→</span><span class="stage">⑥GanglionSpiking(スパイク)</span></div>
+  <p class="stage-caption">この章が扱うのは③（センター−サラウンドの差分）です。①②はその材料として既に揃っています。</p>
+
   <h3>5.1　センターとサラウンド</h3>
   <p>3章・4章のフィルタを、<strong>狭い・速い（センター）</strong>版と<strong>広い・遅い（サラウンド）</strong>版の2セット用意し、その<strong>差</strong>を取ります。</p>
 
@@ -617,6 +639,9 @@ hr.sep{border:none;border-top:1px dashed var(--line);margin:30px 0}
   <span class="kicker">Chapter 06</span>
   <h2>双極細胞とコントラストゲイン制御</h2>
   <p class="lead">OPLまでは完全に線形（足し算と定数倍だけ）でした。双極細胞からは、カメラの自動露出のような「非線形なフィードバック」が入ります。</p>
+
+  <div class="stage-map" role="img" aria-label="パイプライン上の位置"><span class="stage">①空間ぼかし</span><span class="sep">→</span><span class="stage">②時間ぼかし/undershoot</span><span class="sep">→</span><span class="stage">③センター-サラウンド</span><span class="sep">→</span><span class="stage active">④Bipolar(漏れ積分)</span><span class="sep">→</span><span class="stage active">⑤GanglionInput(非線形性)</span><span class="sep">→</span><span class="stage">⑥GanglionSpiking(スパイク)</span></div>
+  <p class="stage-caption">この章が扱うのは主に④（Bipolar）です。6.5節だけ、少し先取りして⑤（GanglionInput）の式も見ます。</p>
 
   <h3>6.1　自動で感度を下げる仕組み</h3>
   <p>コントラストが弱いときはそのまま通し、コントラストが強いときだけ感度を落とす——これを式にすると：</p>
@@ -720,6 +745,9 @@ hr.sep{border:none;border-top:1px dashed var(--line);margin:30px 0}
   <span class="kicker">Chapter 07</span>
   <h2>神経節細胞とスパイク生成</h2>
   <p class="lead">最後の段階で、連続的な数値を「発火する／しない」という0か1かの信号に変えます。</p>
+
+  <div class="stage-map" role="img" aria-label="パイプライン上の位置"><span class="stage">①空間ぼかし</span><span class="sep">→</span><span class="stage">②時間ぼかし/undershoot</span><span class="sep">→</span><span class="stage">③センター-サラウンド</span><span class="sep">→</span><span class="stage">④Bipolar(漏れ積分)</span><span class="sep">→</span><span class="stage active">⑤GanglionInput(非線形性)</span><span class="sep">→</span><span class="stage active">⑥GanglionSpiking(スパイク)</span></div>
+  <p class="stage-caption">この章が扱うのは⑤（GanglionInputのON/OFF分岐）と⑥（GanglionSpiking）です。</p>
 
   <h3>7.1　ON細胞とOFF細胞——2つの独立した経路</h3>
   <p>ここまで「神経節細胞」とひとまとめに呼んできましたが、実際には同じ場所に
@@ -838,6 +866,9 @@ hr.sep{border:none;border-top:1px dashed var(--line);margin:30px 0}
   <span class="kicker">Chapter 08</span>
   <h2>まとめ：全体の数式地図</h2>
   <p class="lead">最後に、この本で出てきた式を一つの流れとして並べ直します。</p>
+
+  <div class="stage-map" role="img" aria-label="パイプライン上の位置"><span class="stage active">①空間ぼかし</span><span class="sep">→</span><span class="stage active">②時間ぼかし/undershoot</span><span class="sep">→</span><span class="stage active">③センター-サラウンド</span><span class="sep">→</span><span class="stage active">④Bipolar(漏れ積分)</span><span class="sep">→</span><span class="stage active">⑤GanglionInput(非線形性)</span><span class="sep">→</span><span class="stage active">⑥GanglionSpiking(スパイク)</span></div>
+  <p class="stage-caption">全ての段をまとめて振り返ります。</p>
 
   <div class="flow vert">
     <div class="node"><b>① 空間のぼかし（3章）</b><span><span class="v">G</span><sub><span class="v">σ</span></sub>(<span class="v">x</span>,<span class="v">y</span>) — 加重平均の重み表、σから切り捨て半径で大きさが決まる</span></div>
