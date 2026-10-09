@@ -375,7 +375,48 @@ hr.sep{border:none;border-top:1px dashed var(--line);margin:30px 0}
   <h2>時間のフィルタ：指数移動平均</h2>
   <p class="lead">3章のぼかしは「空間」方向でした。ここでは同じ考え方を「時間」方向に使います。急な輝度変化を、なめらかな変化に変える処理です。</p>
 
-  <h3>4.1　「今の値」と「さっきの自分」を混ぜる</h3>
+  <h3>4.1　そもそもローパス・ハイパスって何？</h3>
+  <p>この先「ローパスフィルタ」「ハイパスフィルタ」という言葉が繰り返し出てきます。数式に入る前に、
+  何をするものなのか、絵で見てしまいましょう。</p>
+
+  <p>信号（ここでは時間とともに変化する値）には、<strong>ゆっくりした変化</strong>（なだらかな波）と
+  <strong>速い変化</strong>（急なピョコッとした動き）が同時に混ざっていることがあります。</p>
+  <ul>
+    <li><strong>ローパスフィルタ</strong>＝ゆっくりした変化（低い「速さ」＝低周波）だけを通し、
+      速い変化（高周波）を取り除く。<strong>平均をとる・なめらかにする</strong>のと同じことです
+      （1.4節の加重平均を、時間方向に毎瞬間やり続けるイメージ）。</li>
+    <li><strong>ハイパスフィルタ</strong>＝逆に、速い変化だけを通し、ゆっくりした変化を取り除く。
+      <strong>元の信号から、ローパスした結果を引き算する</strong>とできます
+      （4.6節で見る<code>center_undershoot</code>がまさにこれ）。</li>
+  </ul>
+
+  <p>具体例で見てみます。ゆっくりした波（1周期で60ステップ）に、2箇所だけ速い変化
+  （スパイク状の飛び出し）を混ぜた信号を用意し、単純な5点移動平均
+  （1.4節の加重平均で、重みを全部均等にした特別な場合）でローパスし、
+  「元の信号−ローパス結果」でハイパスを計算すると：</p>
+
+  <svg viewBox="0 0 480 260" style="width:100%;max-width:480px;display:block;margin:18px auto" role="img" aria-label="ローパス・ハイパスフィルタの例">
+    <line x1="40" y1="180" x2="450" y2="180" stroke="var(--ink-soft)" stroke-width="1"/>
+    <text x="4" y="184" font-size="10" fill="var(--muted)">0</text>
+    <polyline points="40.0,140.0 46.8,137.1 53.6,134.2 60.3,131.3 67.1,128.6 73.9,126.0 80.7,123.5 87.5,121.3 94.2,119.2 101.0,117.3 107.8,115.8 114.6,114.4 121.4,113.4 128.1,112.6 134.9,112.2 141.7,112.0 148.5,112.2 155.3,112.6 162.0,113.4 168.8,114.4 175.6,67.8 182.4,93.3 189.2,119.2 195.9,121.3 202.7,123.5 209.5,126.0 216.3,128.6 223.1,131.3 229.8,134.2 236.6,137.1 243.4,140.0 250.2,142.9 256.9,145.8 263.7,148.7 270.5,151.4 277.3,154.0 284.1,156.5 290.8,158.7 297.6,160.8 304.4,162.7 311.2,164.2 318.0,165.6 324.7,166.6 331.5,167.4 338.3,215.8 345.1,192.0 351.9,167.8 358.6,167.4 365.4,166.6 372.2,165.6 379.0,164.2 385.8,162.7 392.5,160.8 399.3,158.7 406.1,156.5 412.9,154.0 419.7,151.4 426.4,148.7 433.2,145.8 440.0,142.9"
+      fill="none" stroke="var(--muted)" stroke-width="1.6" stroke-dasharray="2 2"/>
+    <polyline points="40.0,140.0 46.8,138.5 53.6,137.1 60.3,135.6 67.1,134.2 73.9,131.4 80.7,128.7 87.5,126.2 94.2,123.7 101.0,121.5 107.8,119.4 114.6,117.6 121.4,116.0 128.1,114.7 134.9,113.7 141.7,112.9 148.5,112.5 155.3,112.3 162.0,112.5 168.8,112.9 175.6,104.1 182.4,100.3 189.2,101.6 195.9,103.2 202.7,105.0 209.5,116.7 216.3,123.7 223.1,126.2 229.8,128.7 236.6,131.4 243.4,134.2 250.2,137.1 256.9,140.0 263.7,142.9 270.5,145.8 277.3,148.6 284.1,151.3 290.8,153.8 297.6,156.3 304.4,158.5 311.2,160.6 318.0,162.4 324.7,164.0 331.5,165.3 338.3,175.9 345.1,181.5 351.9,181.9 358.6,182.1 365.4,181.9 372.2,171.9 379.0,166.3 385.8,165.3 392.5,164.0 399.3,162.4 406.1,160.6 412.9,158.5 419.7,156.3 426.4,153.8 433.2,151.3 440.0,148.6"
+      fill="none" stroke="var(--indigo)" stroke-width="2.3"/>
+    <polyline points="40.0,180.0 46.8,178.5 53.6,177.1 60.3,175.7 67.1,174.4 73.9,174.6 80.7,174.8 87.5,175.1 94.2,175.5 101.0,175.9 107.8,176.3 114.6,176.8 121.4,177.4 128.1,177.9 134.9,178.5 141.7,179.1 148.5,179.7 155.3,180.3 162.0,180.9 168.8,181.5 175.6,143.7 182.4,173.0 189.2,197.6 195.9,198.1 202.7,198.5 209.5,189.3 216.3,184.9 223.1,185.2 229.8,185.4 236.6,185.6 243.4,185.8 250.2,185.8 256.9,185.8 263.7,185.8 270.5,185.6 277.3,185.4 284.1,185.2 290.8,184.9 297.6,184.5 304.4,184.1 311.2,183.7 318.0,183.2 324.7,182.6 331.5,182.1 338.3,219.9 345.1,190.5 351.9,165.9 358.6,165.3 365.4,164.7 372.2,173.7 379.0,177.9 385.8,177.4 392.5,176.8 399.3,176.3 406.1,175.9 412.9,175.5 419.7,175.1 426.4,174.8 433.2,174.6 440.0,174.4"
+      fill="none" stroke="var(--accent)" stroke-width="2.3"/>
+    <text x="42" y="60" font-size="11" fill="var(--muted)">元の信号（ゆっくりした波＋2つのスパイク）</text>
+    <text x="42" y="222" font-size="11" fill="var(--indigo)">ローパス（波は残る、スパイクはならされる）</text>
+    <text x="300" y="215" font-size="11" fill="var(--accent)">ハイパス（波はほぼ消え、スパイクだけ残る）</text>
+  </svg>
+
+  <p>灰色の破線が元の信号、藍色がローパス結果、橙色がハイパス結果です。ローパスは
+  ゆっくりした波の形をほぼそのまま保ちながら、スパイクの高さは半分以下にならされています。
+  逆にハイパスは、ゆっくりした波の部分はほぼ0近くに潰れている一方、スパイクの場所では
+  大きく振れています——「ゆっくり」と「速い」を、足し算・引き算で仕分けられることが
+  見てとれます。これから先の節で、この「ならす」計算を具体的な数式（漸化式）として
+  組み立てていきます。</p>
+
+  <h3>4.2　「今の値」と「さっきの自分」を混ぜる</h3>
   <p>時間方向のぼかしがうまく作れる理由は単純です。<strong>「今の入力」と「1つ前の自分の出力」を、ある比率で混ぜ合わせる</strong>ことを、毎瞬間繰り返すのです。</p>
   <div class="eq"><span class="eqbox" data-tex="z[k] \;=\; (1-\alpha)\,x[k] \;+\; \alpha\,z[k-1]"></span></div>
   <p><span class="v">x</span>[<span class="v">k</span>] は時刻 <span class="v">k</span> の入力、<span class="v">z</span>[<span class="v">k</span>] は時刻 <span class="v">k</span> の出力。<span class="v">α</span>（アルファ）は0〜1の数で、「さっきの自分をどれだけ引きずるか」を決めます。重みの合計がちょうど1（<span class="eqbox" data-display="false" data-tex="(1-\alpha)+\alpha=1" style="display:inline-block"></span>）になっているので、これは1.4節の加重平均そのものです。</p>
@@ -389,15 +430,15 @@ hr.sep{border:none;border-top:1px dashed var(--line);margin:30px 0}
     <p>最初は0から出発して、だんだん入力の値（5）に近づいていきます。<span class="v">α</span> が大きい（1に近い）ほど、この近づき方がゆっくりになります——これが「時間的になまる」ということです。</p>
   </div>
 
-  <h3>4.2　なぜ「漸化式」と呼ばれるか</h3>
+  <h3>4.3　なぜ「漸化式」と呼ばれるか</h3>
   <p>上の式は <span class="v">z</span>[<span class="v">k</span>] を計算するのに <span class="v">z</span>[<span class="v">k</span>−1]（1つ前の自分）を使っています。このように「前の結果を次の計算に使う」式を<strong>漸化式</strong>、工学の用語では<strong>IIR（無限インパルス応答）フィルタ</strong>と呼びます。1点だけ強い入力（インパルス）を入れても、その影響は理論上ずっと（指数関数的に減衰しながら）残り続けるため、この名前が付いています。</p>
 
   <div class="box bio">
     <span class="label">生理学的な意味</span>
-    <p>これは偶然の数式ではありません。生きた神経細胞の膜は「漏れのあるコンデンサ」として振る舞い、入力電流を受けても瞬時に電位が変わらず、少し前の状態を引きずりながら変化します。4.1節の式は、この膜の性質をそのまま離散化したものです。<span class="v">α</span> は膜の時定数（反応の速さ）に対応します。</p>
+    <p>これは偶然の数式ではありません。生きた神経細胞の膜は「漏れのあるコンデンサ」として振る舞い、入力電流を受けても瞬時に電位が変わらず、少し前の状態を引きずりながら変化します。4.2節の式は、この膜の性質をそのまま離散化したものです。<span class="v">α</span> は膜の時定数（反応の速さ）に対応します。</p>
   </div>
 
-  <h3>4.3　convis での実際の形</h3>
+  <h3>4.4　convis での実際の形</h3>
   <p>convis のコード（<code>TemporalLowPassFilterRecursive</code>）はこれを少し違う書き方で実装しています。中身は同じ漸化式ですが、正規化（重みの合計を1にする操作）を毎回ではなく最後に1回だけ行う形になっています。数式としては完全に等価です。</p>
 
   <h4>実際のパラメータで計算してグラフにする</h4>
@@ -421,8 +462,8 @@ hr.sep{border:none;border-top:1px dashed var(--line);margin:30px 0}
   </svg>
   <p>理論上は <span class="v">k</span>=<span class="v">τ</span>/<span class="v">Δ</span>=10ステップで63.2%に到達するはずですが、実際に1ステップずつ計算すると <span class="v">k</span>=9で先にその値を超えます（連続的な式を1ステップぶんの大きさで離散化している以上、生まれる小さなズレです）。</p>
 
-  <h3>4.4　なぜこの漸化式が「正しい」と言えるのか——微分方程式からの導出</h3>
-  <p>4.1節の漸化式は、天下り的に「こういう式です」と提示しただけでした。ここで、1.9節の道具を使って、<strong>なぜこの形になるのか</strong>をちゃんと導きます。</p>
+  <h3>4.5　なぜこの漸化式が「正しい」と言えるのか——微分方程式からの導出</h3>
+  <p>4.2節の漸化式は、天下り的に「こういう式です」と提示しただけでした。ここで、1.9節の道具を使って、<strong>なぜこの形になるのか</strong>をちゃんと導きます。</p>
   <p>入力 <span class="v">x</span> がある「漏れのある積分」は、こういう微分方程式で書けます：</p>
   <div class="eq"><span class="eqbox" data-tex="\dfrac{dz}{dt} \;=\; \dfrac{x-z}{\tau}"></span></div>
   <p>1.9節の <span class="v">dz</span>/<span class="v">dt</span>=−<span class="v">z</span>/<span class="v">τ</span> とそっくりですが、右辺が「<span class="v">z</span> が <span class="v">x</span> に向かって近づこうとする力」になっている点が違います。<span class="v">z</span> が <span class="v">x</span> より小さければ増え、大きければ減る——<span class="v">z</span> は常に <span class="v">x</span> を追いかけます。</p>
@@ -439,18 +480,18 @@ hr.sep{border:none;border-top:1px dashed var(--line);margin:30px 0}
   <p>右辺を展開すると：</p>
   <div class="eq"><span class="eqbox" data-tex="z[k] \;=\; (1-\alpha)\,x \;+\; \alpha\,z[k-1]"></span></div>
   <div class="box point">
-    <span class="label">4.1節の式と、完全に一致</span>
-    <p>これは4.1節で天下り的に示した漸化式そのものです。つまり <code>center_E</code> の1行は、思いつきの近似ではなく、<strong>「漏れのある積分」という微分方程式を、1タイムステップぶんだけ厳密に解いた結果</strong>です。しかも <span class="v">α</span>=<span class="v">e</span><sup>−<span class="v">Δ</span>/<span class="v">τ</span></sup> という具体的な形まで、1.7節の指数関数の性質から導けました。</p>
+    <span class="label">4.2節の式と、完全に一致</span>
+    <p>これは4.2節で天下り的に示した漸化式そのものです。つまり <code>center_E</code> の1行は、思いつきの近似ではなく、<strong>「漏れのある積分」という微分方程式を、1タイムステップぶんだけ厳密に解いた結果</strong>です。しかも <span class="v">α</span>=<span class="v">e</span><sup>−<span class="v">Δ</span>/<span class="v">τ</span></sup> という具体的な形まで、1.7節の指数関数の性質から導けました。</p>
   </div>
 
-  <h3>4.5　center_undershoot——引き算でハイパスを作る</h3>
+  <h3>4.6　center_undershoot——引き算でハイパスを作る</h3>
   <p>5章で引用するOPLの処理は <code>center_G → center_E → center_undershoot</code> という順で
   進みます。最後の<code>center_undershoot</code>（<code>TemporalHighPassFilterRecursive</code>クラス）は
   何をしているのか、ここで見ておきます。</p>
   <p>発想はシンプルです。<strong>ハイパスフィルタ＝入力から、ローパス（なめらかにした版）を引いたもの</strong>。
   電気回路でいう「直流カット」と同じ考え方です：</p>
   <div class="eq"><span class="eqbox" data-tex="\text{output} \;=\; x \;-\; k\cdot\dfrac{\text{lowpass}(x)}{\text{norm}}"></span></div>
-  <p><span class="v">lowpass</span>(<span class="v">x</span>)の計算自体は、4.1節のcenter_Eと全く同じ漸化式を
+  <p><span class="v">lowpass</span>(<span class="v">x</span>)の計算自体は、4.2節のcenter_Eと全く同じ漸化式を
   内部で使っています。<span class="v">k</span>（既定0.8）は「どれだけ引くか」の割合——
   <span class="v">k</span>=1なら入力の低周波成分を完全に取り除く「純粋なハイパス」、
   <span class="v">k</span>=0.8だと8割だけ引く、ということです。</p>
@@ -461,7 +502,7 @@ hr.sep{border:none;border-top:1px dashed var(--line);margin:30px 0}
     <strong>使ってから</strong>次の値に更新しています。つまりステップ<span class="v">k</span>の
     ローパス計算に使われる入力は<span class="v">x</span>[<span class="v">k</span>]ではなく
     <span class="v">x</span>[<span class="v">k</span>−1]——1ステップ前の値です。
-    4.1節のcenter_Eが<span class="v">x</span>[<span class="v">k</span>]をそのまま使うのとは違います。</p>
+    4.2節のcenter_Eが<span class="v">x</span>[<span class="v">k</span>]をそのまま使うのとは違います。</p>
     <p>実際にインパルス（1点だけ1、他は0）を入れて確かめると、この違いがはっきり見えます：
     インパルスが来た瞬間（<span class="v">t</span>=5）は内部のローパスがまだ1つ前
     （値0）しか見ていないので、何も引かれず出力はそのまま1.0。1ステップ後
@@ -582,7 +623,7 @@ hr.sep{border:none;border-top:1px dashed var(--line);margin:30px 0}
   <p>出力（<span class="v">V</span>）が、次の瞬間の自分自身の変化のしかた（<span class="v">g</span>）に影響する——これが<strong>フィードバック</strong>です。4章のセンター・サラウンドのフィルタは「係数が常に一定」でしたが、ここでは係数自体が出力次第で変わります。これが双極細胞の計算がOPLより難しい理由です。</p>
 
   <h3>6.4　<span class="v">g</span> が一瞬だけ一定だとみなして、式を解いてみる</h3>
-  <p>6.3節の <span class="v">g</span> は本当は <span class="v">V</span> 次第で動きますが、ごく短い1瞬の間だけなら「その瞬間の <span class="v">g</span> の値で一定」とみなせます。すると6.1節の式は、4.4節で解いたのと<strong>まったく同じ形</strong>になります（<span class="v">x</span>=<span class="v">I</span><sub>OPL</sub>/<span class="v">g</span>、<span class="v">τ</span>=1/<span class="v">g</span> と置き換えただけ）：</p>
+  <p>6.3節の <span class="v">g</span> は本当は <span class="v">V</span> 次第で動きますが、ごく短い1瞬の間だけなら「その瞬間の <span class="v">g</span> の値で一定」とみなせます。すると6.1節の式は、4.5節で解いたのと<strong>まったく同じ形</strong>になります（<span class="v">x</span>=<span class="v">I</span><sub>OPL</sub>/<span class="v">g</span>、<span class="v">τ</span>=1/<span class="v">g</span> と置き換えただけ）：</p>
   <div class="eq"><span class="eqbox" data-tex="V(t) \;=\; V_\infty + (V_0-V_\infty)\,e^{-gt}, \qquad V_\infty = \dfrac{I_{OPL}}{g}"></span></div>
   <p><span class="v">V</span><sub>∞</sub> は「<span class="v">g</span> が変わらなければ最終的に落ち着く値」。実際には <span class="v">g</span> が <span class="v">V</span> とともに動くので、本物の挙動はこの式の通りにはなりませんが、<strong>「指数関数で、ある値に近づいていく」という大枠の形は変わりません</strong>。</p>
   <div class="box ex">
@@ -627,7 +668,7 @@ hr.sep{border:none;border-top:1px dashed var(--line);margin:30px 0}
   書きましたが、実際には<span class="v">λV</span>²をそのまま<span class="v">g</span>に使うのではなく、
   一度フィルタをかけた値（<code>inhibition</code>）を使います：</p>
   <div class="eq"><span class="eqbox" data-tex="\text{inhibition}_{\text{new}} = -a_1\cdot\text{inhibition}_{\text{old}} + \lambda_{\text{amp}}\, V_{\text{bip}}^2\, b_0"></span></div>
-  <p>これも4.4節と同じ「係数×状態＋入力」の漸化式——<span class="v">λV</span>²という
+  <p>これも4.5節と同じ「係数×状態＋入力」の漸化式——<span class="v">λV</span>²という
   入力を、もう1段、時間方向になめらかにしてから使っているわけです。さらにconvisの実装は、
   この<code>inhibition</code>に<strong>空間方向の平均化</strong>（近傍ピクセルとの畳み込み）も
   かけます。「強い抑制がかかった細胞の隣も、少し抑制を受けやすくなる」という生理学的な
@@ -748,12 +789,12 @@ hr.sep{border:none;border-top:1px dashed var(--line);margin:30px 0}
   <div class="eq"><span class="eqbox" data-tex="V_{\text{new}} \;=\; V + \big(I - g_L V + \text{noise}\big)\,\Delta"></span></div>
   <p>これを展開して並べ替えると：</p>
   <div class="eq"><span class="eqbox" data-tex="V_{\text{new}} \;=\; V + I\Delta - g_L\Delta V + \text{noise}\cdot\Delta \;=\; \underbrace{(1-g_L\Delta)}_{c_1}\,V \;+\; I\Delta \;+\; \text{noise}\cdot\Delta"></span></div>
-  <p>見覚えのある形になりました——4.4節の <span class="v">z</span>[<span class="v">k</span>]=(1−<span class="v">α</span>)<span class="v">x</span>[<span class="v">k</span>]+<span class="v">α</span><span class="v">z</span>[<span class="v">k</span>−1]
+  <p>見覚えのある形になりました——4.5節の <span class="v">z</span>[<span class="v">k</span>]=(1−<span class="v">α</span>)<span class="v">x</span>[<span class="v">k</span>]+<span class="v">α</span><span class="v">z</span>[<span class="v">k</span>−1]
   と全く同じ「係数×状態＋入力」の形です。<span class="v">c</span><sub>1</sub>=1−<span class="v">g</span><sub>L</sub><span class="v">Δ</span> が
   center_Eの <span class="v">α</span> の役割を果たしています。convisの既定値
   <span class="v">g</span><sub>L</sub>=50、<span class="v">Δ</span>=0.001秒を入れると
   <span class="v">c</span><sub>1</sub>=1−50×0.001=0.95——center_Eの<span class="v">α</span>≈0.905
-  （4.3節）と近い値域です。神経節細胞の膜も、双極細胞も、center_Eも、形は全部同じ
+  （4.4節）と近い値域です。神経節細胞の膜も、双極細胞も、center_Eも、形は全部同じ
   「漏れのある積分」の離散版だということです。</p>
 
   <div class="box ex">
