@@ -703,6 +703,19 @@ hr.sep{border:none;border-top:1px dashed var(--line);margin:30px 0}
   </svg>
   <p><span class="v">x</span>=0のところで、左側（飽和する側）と右側（直線の側）の傾きがどちらもちょうど <span class="v">λ</span><sub>G</sub>=100になっていて、グラフが滑らかに繋がっています（カクッと折れ曲がっていません）。<span class="v">x</span>が大きく負（強い抑制）になるほど出力はなめらかに0へ近づき、<span class="v">x</span>が正（興奮）のときは直線的に増えていく——「弱い抑制はそのまま通すが、強い抑制でも出力をゼロ未満にはできない」という、発火率ならではの非対称な非線形性です。</p>
 
+  <div class="box point">
+    <span class="label">論文の式(15)そのもの</span>
+    <p>これはVirtual Retina論文の式(15)（§2.3.2、原題"Synaptic current upon ganglion cells"）です。論文では<span class="v">T</span><sub>BG</sub>(<span class="v">v</span>)=<span class="v">T</span><sub>0</sub>²/(<span class="v">T</span><sub>0</sub>−<span class="v">λ</span><sub>BG</sub>(<span class="v">v</span>−<span class="v">V</span><sub>BG</sub>))（<span class="v">v</span>&lt;<span class="v">V</span><sub>BG</sub>のとき）と書かれています。右辺を<span class="v">i</span><sub>0</sub>/(1−<span class="v">λ</span><sub>G</sub>(<span class="v">x</span>−<span class="v">v</span><sub>0</sub>)/<span class="v">i</span><sub>0</sub>) の形に変形すると、<span class="v">T</span><sub>0</sub>=<span class="v">i</span><sub>0</sub>、<span class="v">λ</span><sub>BG</sub>=<span class="v">λ</span><sub>G</sub>、<span class="v">V</span><sub>BG</sub>=<span class="v">v</span><sub>0</sub> と置き換えただけでぴったり一致します。convisの変数名は論文の記号をそのまま読み替えたものです。</p>
+  </div>
+
+  <h4>transient と spatial_pooling——今は使われていない2つのパラメータの本当の役割</h4>
+  <p>GanglionInputには、ここまで触れていないパラメータが2つあります。<code>n(x)</code>に渡す前に信号を加工する<code>transient</code>（時間方向のハイパスFIR、重み<span class="v">w</span><sup>trs</sup>既定0.7）と、<code>n(x)</code>の後にかける<code>spatial_pooling</code>（空間ガウシアン、既定<span class="v">σ</span>=0°で実質オフ、5.5節で見た切り捨て半径の式に<span class="v">σ</span>=0を入れると1×1の恒等カーネルになります）。論文§2.4.1によれば、これらは<strong>ネコ網膜のX細胞・Y細胞</strong>（霊長類ではMidget細胞・Parasol細胞）という、性質の違う2種類の神経節細胞を再現するための設計です：</p>
+  <ul>
+    <li><strong>X細胞（tonic、持続的に反応）</strong>：<span class="v">w</span><sup>trs</sup>=0.7——convisの既定値そのもの</li>
+    <li><strong>Y細胞（phasic、変化の瞬間だけ強く反応）</strong>：<span class="v">w</span><sup>trs</sup>=1.0（完全なハイパス）、さらに論文の式(17)の通り<code>spatial_pooling</code>で広い範囲の双極細胞の入力を平均する（Y細胞は樹状突起が広いため）</li>
+  </ul>
+  <p>つまりconvisの既定設定は、何も設定していないように見えて、暗黙のうちに「X細胞」を再現しています。<code>spatial_pooling</code>が既定でほぼ無効なのは手抜きではなく、X細胞という具体的な選択そのものです。</p>
+
   <h3>6.6　実際の<code>Bipolar</code>コード：gが動的に変わる以外は6.4節のまま</h3>
   <p>6.5節は<code>GanglionInput</code>クラスの話でしたが、6.1〜6.4節で立てた微分方程式
   （<span class="eqbox" data-display="false" data-tex="dV/dt=I_{OPL}-gV" style="display:inline-block"></span>）
@@ -710,6 +723,11 @@ hr.sep{border:none;border-top:1px dashed var(--line);margin:30px 0}
   1ステップぶんだけ、<strong>そのまま</strong>使っています：</p>
   <div class="eq"><span class="eqbox" data-tex="\text{total\_conductance} = g_L + \text{inhibition}, \qquad \text{attenuation\_map} = e^{-\Delta\cdot\text{total\_conductance}}"></span></div>
   <p><span class="v">g</span><sub>L</sub>（leak、漏れ）が6.1節の<span class="v">g</span><sub>0</sub>に対応する、常に一定の基本コンダクタンスです。6.1節では<span class="v">g</span>=<span class="v">g</span><sub>0</sub>+<span class="v">λV</span>²とまとめて書きましたが、実際には<span class="v">λV</span>²の部分は<code>inhibition</code>という名前で、瞬時の値ではなく後述のフィルタをかけた値が使われます。</p>
+
+  <div class="box point">
+    <span class="label">これも論文の式のままで、近似ではない</span>
+    <p>論文の式(9)-(11)（§2.3.1）はこうです：<span class="v">dV</span><sub>Bip</sub>/<span class="v">dt</span>=<span class="v">I</span><sub>OPL</sub>−<span class="v">g</span><sup>L</sup><sub>Am</sub><span class="v">V</span><sub>Bip</sub>、<span class="v">g</span><sup>L</sup><sub>Am</sub>=<span class="v">K</span>∗(<span class="v">g</span><sub>BA</sub>+<span class="v">λ</span><sub>BA</sub><span class="v">V</span><sub>Bip</sub>²)。<span class="v">K</span>は5.3節の<span class="v">K</span><sub>σ,τ</sub>と同じ形の結合カーネルで、論文§2.1.2によれば値の合計がちょうど1になるよう作られています。定数<span class="v">g</span><sub>BA</sub>を<span class="v">K</span>で畳み込んでも<span class="v">g</span><sub>BA</sub>のまま変わらないので、論文の式は<strong><span class="v">g</span><sub>BA</sub>+<span class="v">K</span>∗(<span class="v">λ</span><sub>BA</sub><span class="v">V</span><sub>Bip</sub>²)</strong>と書き直せます——これがconvisの「<span class="v">g</span><sub>L</sub>（畳み込みの外）＋<code>inhibition</code>（<span class="v">λV</span>²だけ畳み込んだもの）」と完全に一致します。convisの構造は論文の近似ではなく、数式として厳密に同じものです。</p>
+  </div>
   <div class="eq"><span class="eqbox" data-tex="E_\infty = \dfrac{\text{input\_amp}\times I_{OPL}}{\text{total\_conductance}}, \qquad V_{\text{bip}} = (V_{\text{prev}}-E_\infty)\times\text{attenuation\_map} + E_\infty"></span></div>
   <p>見比べると、<span class="v">E</span><sub>∞</sub>が6.4節の<span class="v">V</span><sub>∞</sub>、
   <span class="v">attenuation_map</span>が6.4節の<span class="v">e</span><sup>−<span class="v">gt</span></sup>に
@@ -793,10 +811,13 @@ hr.sep{border:none;border-top:1px dashed var(--line);margin:30px 0}
   「正の入力」として同じ非線形関数に通せるようにしている、というわけです。</p>
 
   <div class="box bio">
-    <span class="label">生理学的な対応</span>
+    <span class="label">生理学的な対応——しかも論文が明示的にそう書いている</span>
     <p>実際の網膜にも、明るさの増加に反応するON型双極細胞・神経節細胞と、減少に反応する
-    OFF型の細胞が、本当に別の細胞として存在します。convisの<span class="v">sign</span>は
-    この2系統を、同じ計算式を使い回しながら符号だけ変えて再現する実装上の工夫です。</p>
+    OFF型の細胞が、本当に別の細胞として存在します。これは単にconvisの実装上の都合ではありません。
+    Virtual Retina論文は、OFF細胞の作り方をまさにこの形で説明しています（§2.4の直前）：
+    「OFF細胞をシミュレートしたいなら、式(13)の符号を反転させて
+    <span class="v">I</span><sub>Gang</sub>(<span class="v">x</span>,<span class="v">y</span>,<span class="v">t</span>)=<span class="v">T</span><sub>BG</sub>(−<span class="v">V</span><sup>trs</sup><sub>Bip</sub>)(<span class="v">x</span>,<span class="v">y</span>,<span class="v">t</span>) とすればよい」——
+    まさに convis の<span class="v">sign</span>=−1そのものです。</p>
   </div>
 
   <p>実際にconvisを動かすと、ON細胞の出力が<code>output.array(0)</code>（または
@@ -839,6 +860,11 @@ hr.sep{border:none;border-top:1px dashed var(--line);margin:30px 0}
   <div class="box point">
     <span class="label">この性質が持つ実用上の意味</span>
     <p>スパイクの<strong>タイミング・場所</strong>は、ごくわずかな計算誤差でも敏感にずれます（しきい値ぎりぎりで水が溢れるかどうかが、ほんの少しの違いで変わるのと同じ）。一方で、ある程度の時間・範囲で発火した<strong>回数（頻度）</strong>は、個々のスパイクの位置ほどは崩れにくい性質があります。モデルの出力を評価するときは、どちらを見ているかを意識する必要があります。</p>
+  </div>
+
+  <div class="box ex">
+    <span class="label">論文の式(16)（§2.4.1）と、数値までぴったり一致する</span>
+    <p>論文のLIFモデルは<span class="v">dV</span><sub>n</sub>/<span class="v">dt</span>=<span class="v">I</span><sub>Gang</sub>−<span class="v">g</span><sup>L</sup><span class="v">V</span><sub>n</sub>+<span class="v">η</span><sub>v</sub>、しきい値<span class="v">V</span><sub>n</sub>=1で発火、不応期は平均<span class="v">N</span>(3ms, 1ms)の正規分布——これはconvisの既定値（<span class="v">θ</span>=1.0、<code>refr_mu</code>=0.003秒、<code>refr_sigma</code>=0.001秒）と記号だけでなく数値まで完全に一致します。論文は「時定数1/<span class="v">g</span><sup>L</sup>は典型的に20ms」とも書いていますが、convisの既定<span class="v">g</span><sub>L</sub>=50Hzで計算すると1/50=0.02秒=20ms——これも一致します。</p>
   </div>
 
   <h3>7.4　実際のconvisコードでは（式を並べ替えると4章と同じ形になる）</h3>
